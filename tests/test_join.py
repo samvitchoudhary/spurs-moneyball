@@ -45,6 +45,11 @@ def test_vuskovic_matches_the_unaccented_transfermarkt_name(player_map):
     assert row["match_method"] == "tier1"
 
 
+def test_matthew_smith_arsenal_2000_not_matched_to_st_johnstone(player_map):
+    row = _row(player_map, "Matthew Smith", 2000)
+    assert pd.isna(row["tm_player_id"])
+
+
 def test_accented_tottenham_names_match(player_map):
     kinsky = _row(player_map, "Antonín Kinský", 2003)
     dragusin = _row(player_map, "Radu Drăgușin", 2002)

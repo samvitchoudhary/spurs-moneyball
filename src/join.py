@@ -18,6 +18,7 @@ PLAYER_SEASON_PATH = ROOT / "data" / "processed" / "player_season.csv"
 TM_PLAYERS_PATH = ROOT / "data" / "processed" / "tm_players.csv"
 TM_VALUES_PATH = ROOT / "data" / "processed" / "tm_season_values.csv"
 TM_CLUBS_PATH = ROOT / "data" / "raw" / "transfermarkt" / "clubs.csv"
+TM_TRANSFERS_PATH = ROOT / "data" / "raw" / "transfermarkt" / "transfers.csv"
 OVERRIDES_PATH = ROOT / "data" / "manual_overrides.csv"
 MAP_PATH = ROOT / "data" / "processed" / "player_id_map.csv"
 CLUB_MAP_PATH = ROOT / "data" / "processed" / "club_name_map.csv"
@@ -171,6 +172,58 @@ def _still_open(mapped: pd.DataFrame) -> pd.Index:
     return mapped.index[mapped["tm_player_id"].isna() & mapped["match_method"].isna()]
 
 
+def _matched_club_lookup(club_map: pd.DataFrame) -> dict[str, str]:
+    """FBref team name -> Transfermarkt club name."""
+    return {
+        row.fbref_team: row.tm_club_name
+        for row in club_map.itertuples(index=False)
+        if row.status == "matched" and row.tm_club_name
+    }
+
+
+def load_transfer_clubs(path: Path = TM_TRANSFERS_PATH) -> dict[int, set[str]]:
+    """Every club a Transfermarkt player has been associated with in transfers.csv."""
+    if not path.exists():
+        return {}
+    transfers = pd.read_csv(path, usecols=["player_id", "from_club_name", "to_club_name"])
+    clubs: dict[int, set[str]] = {}
+    for row in transfers.itertuples(index=False):
+        player_id = int(row.player_id)
+        bucket = clubs.setdefault(player_id, set())
+        if isinstance(row.from_club_name, str) and row.from_club_name.strip():
+            bucket.add(row.from_club_name.strip())
+        if isinstance(row.to_club_name, str) and row.to_club_name.strip():
+            bucket.add(row.to_club_name.strip())
+    return clubs
+
+
+def _tm_club_set(
+    player_id: int,
+    current_club: object,
+    transfer_clubs: dict[int, set[str]],
+) -> set[str]:
+    """Current club plus every club name seen in that player's transfer history."""
+    clubs = set(transfer_clubs.get(player_id, set()))
+    if isinstance(current_club, str) and current_club.strip():
+        clubs.add(current_club.strip())
+    return clubs
+
+
+def _tier2_club_agrees(
+    fbref_teams: tuple,
+    tm_player_id: int,
+    current_club: object,
+    club_lookup: dict[str, str],
+    transfer_clubs: dict[int, set[str]],
+) -> bool:
+    """True when a mapped FBref club appears on the TM player's current club or transfers."""
+    allowed = {club_lookup[team] for team in fbref_teams if team in club_lookup} - {None, ""}
+    if not allowed:
+        return False
+    history = _tm_club_set(tm_player_id, current_club, transfer_clubs)
+    return bool(allowed & history)
+
+
 def _tier1(mapped: pd.DataFrame, tm_players: pd.DataFrame) -> None:
     """Exact normalized name and the same birth year. One-word names wait for tier 3."""
     grouped: dict[tuple[str, int], list[int]] = {}
@@ -193,8 +246,14 @@ def _tier1(mapped: pd.DataFrame, tm_players: pd.DataFrame) -> None:
             mapped.at[index, "match_method"] = "ambiguous"
 
 
-def _tier2(mapped: pd.DataFrame, tm_players: pd.DataFrame) -> None:
-    """Fuzzy name, birth year within one year. More than one candidate is a miss."""
+def _tier2(
+    mapped: pd.DataFrame,
+    tm_players: pd.DataFrame,
+    club_map: pd.DataFrame,
+    transfer_clubs: dict[int, set[str]],
+) -> None:
+    """Fuzzy name, birth year within one year. A one-year gap also needs club agreement."""
+    club_lookup = _matched_club_lookup(club_map)
     by_year: dict[int, pd.DataFrame] = {}
     usable = tm_players.loc[tm_players["name_normalized"].notna() & tm_players["birth_year"].notna()]
     for year, group in usable.groupby(usable["birth_year"].map(_birth_year)):
@@ -223,20 +282,29 @@ def _tier2(mapped: pd.DataFrame, tm_players: pd.DataFrame) -> None:
             workers=1,
         )
         for row_number, (index, name) in enumerate(queries):
+            identity = mapped.loc[index]
             passing = [column for column, score in enumerate(scores[row_number]) if score >= 90]
-            ids = list(dict.fromkeys(int(choices.iloc[column]["player_id"]) for column in passing))
-            if len(ids) == 1:
-                column = max(passing, key=lambda item: scores[row_number][item])
+            accepted = []
+            for column in passing:
                 candidate = choices.iloc[column]
-                score = float(scores[row_number][column])
-                same_tokens = set(name.split()) == set(str(candidate.name_normalized).split())
-                years_differ = _birth_year(candidate.birth_year) != birth
-                # A one-year gap is for the same spelling, not for a different surname.
-                if years_differ and not same_tokens and score < 97:
-                    continue
+                candidate_birth = _birth_year(candidate.birth_year)
+                if candidate_birth == birth:
+                    accepted.append(column)
+                elif candidate_birth is not None and abs(candidate_birth - birth) == 1:
+                    if _tier2_club_agrees(
+                        identity["teams"],
+                        int(candidate.player_id),
+                        candidate.current_club_name,
+                        club_lookup,
+                        transfer_clubs,
+                    ):
+                        accepted.append(column)
+            ids = list(dict.fromkeys(int(choices.iloc[column]["player_id"]) for column in accepted))
+            if len(ids) == 1:
+                column = max(accepted, key=lambda item: scores[row_number][item])
                 mapped.at[index, "tm_player_id"] = ids[0]
                 mapped.at[index, "match_method"] = "tier2"
-                mapped.at[index, "score"] = score
+                mapped.at[index, "score"] = float(scores[row_number][column])
             elif len(ids) > 1:
                 mapped.at[index, "match_method"] = "ambiguous"
 
@@ -321,8 +389,9 @@ def build_player_id_map(
     identities = _identities(player_season)
     valid_ids = set(int(player_id) for player_id in tm_players["player_id"].dropna())
     mapped = _apply_overrides(identities, overrides if overrides is not None else load_overrides(), valid_ids)
+    transfer_clubs = load_transfer_clubs()
     _tier1(mapped, tm_players)
-    _tier2(mapped, tm_players)
+    _tier2(mapped, tm_players, club_map, transfer_clubs)
     _tier3(mapped, tm_players, club_map)
     mapped = _resolve_conflicts(mapped)
     columns = ["player", "birth_year", "tm_player_id", "match_method", "score"]
