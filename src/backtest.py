@@ -456,13 +456,16 @@ def _window_picks(
         role_signings = signings.loc[signings["position_group"] == role]
         spurs_change = role_signings["log_value_change"].dropna()
         spurs_median = float(spurs_change.median()) if len(spurs_change) else np.nan
-        pool = scored.loc[
+        eligible = scored.loc[
             (scored["position_group"] == role)
             & (scored["age"] <= 27)
             & (scored["market_value_eur"] >= MIN_VALUE_EUR)
-        ].sort_values(["log_gap", "player"], ascending=[False, True])
+        ]
+        pool = eligible.sort_values(["log_gap", "player"], ascending=[False, True])
         position_change = scored.loc[scored["position_group"] == role, "log_value_change"].dropna()
         position_median = float(position_change.median()) if len(position_change) else np.nan
+        age_matched_change = eligible["log_value_change"].dropna()
+        age_matched_median = float(age_matched_change.median()) if len(age_matched_change) else np.nan
         for rank, pick in enumerate(pool.head(3).itertuples(index=False), start=1):
             rows.append(
                 {
@@ -484,6 +487,7 @@ def _window_picks(
                     "log_value_change": pick.log_value_change,
                     "signed_by_spurs": int(pick.tm_player_id) in signed_ids,
                     "spurs_median_log_change": spurs_median,
+                    "age_matched_median_log_change": age_matched_median,
                     "position_median_log_change": position_median,
                 }
             )
