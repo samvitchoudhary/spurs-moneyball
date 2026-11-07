@@ -1,0 +1,182 @@
+player,birth_year,minutes,teams,match_method,candidate_1_name,candidate_1_id,candidate_1_score,candidate_1_birth_year,candidate_1_club,candidate_2_name,candidate_2_id,candidate_2_score,candidate_2_birth_year,candidate_2_club,candidate_3_name,candidate_3_id,candidate_3_score,candidate_3_birth_year,candidate_3_club
+Gabriel Magalhães,1997.0,12377.0,Arsenal,,Gabriel Taliari,585876.0,68.8,1997.0,Clube do Remo,Gabriel Jesus,363205.0,66.7,1997.0,Arsenal FC,Gabriel Neves,454181.0,66.7,1997.0,Club Estudiantes de La Plata
+Max Kilman,1997.0,11636.0,"West Ham, Wolves",,Maximilian Kilman,525247.0,74.1,1997.0,West Ham United,Max Clark,183291.0,63.2,1996.0,Vitesse Arnhem,Kylian Mbappé,342229.0,60.9,1998.0,Real Madrid
+Obite N'Dicka,1999.0,11597.0,"Frankfurt, Roma",,Théo Ndicka,461595.0,66.7,2000.0,FC Oleksandriya,Victor Dican,568540.0,64.0,2000.0,FCV Farul Constanta,Adrián Butzke,596884.0,61.5,1999.0,CD Nacional
+Éderson Silva,1999.0,11031.0,Atalanta,,Leandro Silva,710860.0,76.9,1999.0,Rio Ave FC,Éderson,607854.0,70.0,1999.0,Atalanta BC,Reko Silva,511864.0,69.6,1999.0,Portimonense SC
+Łukasz Skorupski,1991.0,10886.0,Bologna,,Łukasz Sekulski,80769.0,83.9,1990.0,Wisla Plock,Lukasz Skorupski,80894.0,56.2,1991.0,Bologna Football Club 1909,Tomasz Kupisz,45185.0,55.2,1990.0,Chievo Verona
+Pierre Højbjerg,1995.0,10441.0,"Marseille, Tottenham",,Pierre-Emile Højbjerg,167799.0,83.3,1995.0,Olympique Marseille,Jeppe Höjbjerg,223522.0,69.0,1995.0,Esbjerg fB,Pierre Bourdin,164902.0,62.1,1994.0,Beerschot VA
+Isaac Palazón Camacho,1994.0,10364.0,Rayo Vallecano,,Isi Palazón,362086.0,62.5,1994.0,Rayo Vallecano,João Camacho,268732.0,60.6,1994.0,Fatih Karagümrük,Marco Piscopo,57305.0,58.8,1994.0,Udinese Calcio
+Julian Chabot,1998.0,9664.0,"Köln, Stuttgart",,Julian Calor,341434.0,80.0,1997.0,Vitesse Arnhem,Julián Chicco,401583.0,76.9,1998.0,A.G.S Asteras Tripolis,Dylan Chambost,508941.0,74.1,1997.0,Columbus Crew
+Illia Zabarnyi,2002.0,9485.0,"Bournemouth, Paris SG",,Ilya Zabarnyi,659089.0,88.9,2002.0,Paris Saint-Germain,Ilias Karargyris,537944.0,66.7,2002.0,Olympiakos Syndesmos Filathlon Peiraios,Zakaria Silini,906192.0,64.3,2003.0,RFC Seraing
+Gleison Bremer,1997.0,9478.0,Juventus,,Leon Brüggemeier,259150.0,73.3,1997.0,SC Paderborn 07,Lewis O'Brien,560694.0,66.7,1998.0,Nottingham Forest,Talles Brener,740732.0,66.7,1998.0,Rukh Lviv
+José Luis Gayà,1995.0,9463.0,Valencia,,José Gayà,221322.0,78.3,1995.0,Valencia CF,Luiz Araújo,435485.0,64.0,1996.0,Clube de Regatas do Flamengo,Stelios Nakas,234914.0,59.3,1994.0,AO Xanthi
+Emerson Palmieri,1994.0,9414.0,"Marseille, West Ham",,Jefferson Lerma,262980.0,64.5,1994.0,Crystal Palace,Emerson,181778.0,60.9,1994.0,Olympique Marseille,Émerson,213429.0,60.9,1995.0,Ural Yekaterinburg
+Đorđe Petrović,1999.0,9007.0,"Bournemouth, Chelsea, Strasbourg",,Zvonimir Petrovic,523184.0,71.0,2000.0,Morski Związkowy Klub Sportowy Arka Gdynia Spółka Akcyjna,Pedro Vitor,605326.0,64.0,1998.0,PFK Lviv,Pedro Soares,591726.0,61.5,1999.0,Desportivo Aves (- 2020)
+Álex Grimaldo,1995.0,8790.0,"Atlético Madrid, Leverkusen",,Alejandro Grimaldo,193082.0,77.4,1995.0,Bayer 04 Leverkusen,Álex García,348549.0,75.0,1994.0,Atlético de Madrid,Alex Grant,225068.0,69.6,1994.0,Sydney FC
+Valentín Castellanos,1998.0,8739.0,"Girona, Lazio, West Ham",,Taty Castellanos,522784.0,77.8,1998.0,West Ham United,Valentin Costache,341391.0,70.3,1998.0,UTA Arad,Lautaro Valenti,625202.0,68.6,1999.0,Parma Calcio 1913
+Andy Robertson,1994.0,8509.0,"Liverpool, Tottenham",,Andrew Robertson,234803.0,86.7,1994.0,Liverpool FC,Clark Robertson,119569.0,75.9,1993.0,Dundee FC,Anderson,539183.0,72.7,1995.0,FC Vizela
+Ederson Moraes,1993.0,8255.0,Manchester City,,Ederson Moreno,599707.0,85.7,1994.0,Deportivo Pereira,Mateus Anderson,347824.0,75.9,1994.0,CD Feirense,Edison Flores,194998.0,74.1,1994.0,
+José Luis García Vayá,1998.0,8194.0,Valencia,,José García,298276.0,68.8,1997.0,CA Osasuna,Juanma García,242281.0,64.7,1997.0,Vorskla Poltava,José Luis Trápaga,284890.0,63.2,1998.0,Real Betis Balompié
+Joakim Mæhle,1997.0,8071.0,"Atalanta, Wolfsburg",,Joakim Maehle,369674.0,88.0,1997.0,VfL Wolfsburg,Min-jae Kim,503482.0,60.9,1996.0,Bayern Munich,Jordan McGhee,193881.0,56.0,1996.0,Motherwell FC
+Toti Gomes,1999.0,7794.0,Wolves,,Tobi Omole,503687.0,70.0,1999.0,Tottenham Hotspur,Igor Gomes,553459.0,70.0,1999.0,Clube Atlético Mineiro,Tom Holmes,424900.0,70.0,2000.0,FCV Dender EH
+Alexsandro Ribeiro,1999.0,7761.0,Lille,,Alexandro Bernabei,719635.0,77.8,2000.0,Sport Club Internacional,Alexandros Tereziou,609651.0,75.7,2000.0,A.G.S Asteras Tripolis,Alexandre Gameiro,696597.0,74.3,1999.0,OGC Nice
+Rasmus Kristensen,1997.0,7755.0,"Frankfurt, Leeds United, Roma",,Rasmus Nissen Kristensen,369684.0,82.9,1997.0,Eintracht Frankfurt,Rasmus Lauritsen,325994.0,78.8,1996.0,Bröndby IF,Rasmus Karjalainen,273383.0,74.3,1996.0,Fortuna Sittardia Combinatie
+Tuta,1999.0,7592.0,Frankfurt,,Tuta,546213.0,100.0,1999.0,Eintracht Frankfurt,Gustavo,735574.0,54.5,2000.0,,Mateus Vital,408958.0,50.0,1998.0,Panathinaikos Athlitikos Omilos
+Marquinhos,1994.0,7481.0,Paris SG,,Marquinhos,181767.0,100.0,1994.0,Paris Saint-Germain,Marcinho,514500.0,77.8,1995.0,Associação Chapecoense de Futebol,Marcinho,520081.0,77.8,1995.0,Kawasaki Frontale
+Angeliño,1997.0,7420.0,"Dep. A Coruña, Hoffenheim, Roma",,Angeliño,277179.0,100.0,1997.0,Associazione Sportiva Roma,Ángelo Martino,471641.0,72.7,1998.0,Club Atlético Newell’s Old Boys,Angelos Piniotis,365258.0,66.7,1996.0,PAS Lamia 1964
+Vinicius Souza,1999.0,6860.0,"Espanyol, Sheffield United, Wolfsburg",,Vini Souza,663581.0,83.3,1999.0,VfL Wolfsburg,Caio Vinicius,565443.0,74.1,1999.0,Esporte Clube Vitória,Vinícius Lopes,688881.0,71.4,1999.0,CD Santa Clara
+Nicolás González,1998.0,6835.0,"Atlético Madrid, Fiorentina, Juventus",,Nico González,486031.0,89.7,1998.0,Juventus FC,Lucas González,660198.0,80.0,1997.0,Asociación Atlética Estudiantes,Tomás González,1117221.0,80.0,1998.0,Asociación Atlética Estudiantes
+Michel Ndary Adopo,2000.0,6731.0,"Atalanta, Cagliari, Torino",,Michel Adopo,564305.0,80.0,2000.0,Cagliari Calcio,Michael Baidoo,471145.0,68.8,1999.0,Idrottsföreningen Elfsborg,Falko Michel,527270.0,60.0,2001.0,VfB Stuttgart
+Kiké,1989.0,6720.0,"Alavés, Espanyol, Osasuna",,Kisley,258761.0,60.0,1990.0,CF União Madeira (-2021),Kadir Keles,53555.0,53.3,1988.0,Akhisarspor,Kike García,93936.0,53.3,1989.0,RCD Espanyol Barcelona
+Fabián Ruiz Peña,1996.0,6559.0,Paris SG,,Fabián Ruiz,350219.0,81.5,1996.0,Paris Saint-Germain,Fabian Rüdlin,230818.0,69.0,1997.0,SC Freiburg,Fabian Gmeiner,189098.0,66.7,1997.0,NEC Nijmegen
+Walace,1995.0,6428.0,Udinese,,Walace,323954.0,100.0,1995.0,Esporte Clube Vitória,Wallace,225335.0,92.3,1994.0,Yeni Malatyaspor,Álex Arce,970518.0,66.7,1995.0,Club Sportivo Independiente Rivadavia
+Musa Al-Taamari,1997.0,6351.0,"Montpellier, Rennes",,Mousa Tamari,551505.0,81.5,1997.0,Stade Rennais FC,Ali Al-Asmari,509898.0,71.4,1997.0,Al-Shabab Club,Amir Al-Ammari,303766.0,69.0,1997.0,Cracovia
+Danilo,1991.0,6217.0,Juventus,,Danilo,51232.0,100.0,1990.0,Antalyaspor,Danilo,145707.0,100.0,1991.0,Clube de Regatas do Flamengo,Mailó,241900.0,72.7,1992.0,CF Os Belenenses
+Jeremías Ledesma,1993.0,6108.0,Cádiz,,Conan Ledesma,284342.0,62.1,1993.0,Club Atlético Rosario Central,Jefferson Lerma,262980.0,58.1,1994.0,Crystal Palace,Jérémy Labor,126695.0,57.1,1992.0,Zulte Waregem
+Sávio,2004.0,5905.0,"Girona, Manchester City, Tottenham",,Savinho,743591.0,83.3,2004.0,Manchester City,Otávio,1094885.0,72.7,2005.0,CF Estrela Amadora,Gavi,646740.0,66.7,2004.0,FC Barcelona
+Abner,2000.0,5878.0,"Lyon, Real Betis",,Abner,646402.0,100.0,2000.0,Olympique Lyon,Brenner,412366.0,66.7,2000.0,Club de Regatas Vasco da Gama,Bandeira,525576.0,61.5,2001.0,Kryvbas Kryvyi Rig
+Juan Cruz Armada,1992.0,5870.0,Osasuna,,Juan Cruz,169497.0,72.0,1992.0,CA Osasuna,Juan Garro,174042.0,61.5,1992.0,Asociación Atlética Estudiantes,Juan Franco,331245.0,59.3,1992.0,Club Atlético Gimnasia y Esgrima de Mendoza
+Jubal,1993.0,5857.0,Auxerre,,Jubal,149928.0,100.0,1993.0,FK Krasnodar,Buba,292409.0,66.7,1993.0,Portimonense SC,Juanmi,126737.0,54.5,1993.0,Getafe CF
+Milan Đurić,1990.0,5825.0,"Cremonese, Hellas Verona, Monza, Parma",,Milan Rodic,68978.0,81.8,1991.0,FC Zürich,Milan Radin,169268.0,72.7,1991.0,FK TSC Backa Topola,Jasmin Kurtic,85825.0,66.7,1989.0,Panthessalonikios Athlitikos Omilos Konstantinoupoliton
+Victor Bernth Kristiansen,2002.0,5681.0,"Bologna, Leicester City",,Victor Kristiansen,564529.0,83.7,2002.0,Leicester City,Thomas Christiansen,462829.0,63.6,2001.0,Aalborg BK,Bjørn Martin Kristensen,877339.0,62.5,2002.0,KFUM-Kameratene Oslo
+Mama Samba Baldé,1995.0,5496.0,"Brest, Lyon, Troyes",,Mama Baldé,325223.0,76.9,1995.0,Stade Brestois 29,Osama Al-Khalaf,364392.0,64.5,1996.0,Al-Orobah FC,Adama Camara,973949.0,64.3,1996.0,Paris FC
+Neto,1989.0,5445.0,"Arsenal, Bournemouth, Juventus",,Neto,111819.0,100.0,1989.0,S. A. F. Botafogo,Neuton,105468.0,80.0,1990.0,Udinese Calcio,Luís Neto,56036.0,61.5,1988.0,Sporting CP
+André,2001.0,5234.0,Wolves,,André,800176.0,100.0,2001.0,Wolverhampton Wanderers,Andrew,610417.0,90.9,2001.0,Clube de Regatas do Flamengo,Andrey,997076.0,90.9,2002.0,CD Santa Clara
+Yann Aurel Bisseck,2000.0,5145.0,Inter,,Yann Bisseck,441986.0,80.0,2000.0,Inter Milan,Julian Rieckmann,380078.0,58.8,2000.0,SV Werder Bremen,Ryan Alebiosu,610649.0,58.1,2001.0,
+Yehor Yarmoliuk,2004.0,5125.0,Brentford,,Yegor Yarmolyuk,717411.0,86.7,2004.0,Brentford FC,Moussa Yeo,1041861.0,56.0,2004.0,Fußballclub Red Bull Salzburg,Ali Houary,1064538.0,56.0,2005.0,Elche CF
+Emi Buendía,1996.0,5107.0,"Aston Villa, Leverkusen",,Emiliano Buendía,321247.0,81.5,1996.0,Aston Villa,Issam Ben Khemis,358508.0,66.7,1996.0,FC Lorient,Rémi Oudin,399543.0,66.7,1996.0,US Lecce
+Jan-Niklas Beste,1999.0,5077.0,"Freiburg, Heidenheim",,Niklas Beste,342967.0,85.7,1999.0,SC Freiburg,José Juan Macías,546047.0,62.5,1999.0,UNAM Pumas,Nicolas Basin,365952.0,62.1,1998.0,FC Metz
+Jonny Castro,1994.0,5015.0,"Alavés, Wolves",,Ronny Marcos,159037.0,66.7,1993.0,Hamburger SV,Manuel Castro,335984.0,64.0,1995.0,FC Juárez,Rodrigo Castro,238661.0,61.5,1993.0,FC Girondins Bordeaux
+Ohis Felix Uduokhai,1997.0,4839.0,"Augsburg, Union Berlin",,Felix Uduokhai,278343.0,84.8,1997.0,Beşiktaş Jimnastik Kulübü,Ohoulo Framelin,443683.0,52.9,1996.0,CD Nacional,Amin Al-Bukhari,509875.0,52.9,1997.0,Al-Fateh Club
+Souleymane Touré,2003.0,4825.0,"Auxerre, Lorient, Marseille, Udinese",,Soumaela Traoré,1051760.0,71.0,2004.0,RAAL La Louvière,Souleymane Faye,666971.0,64.5,2003.0,Sporting CP,Román Torres,959197.0,64.3,2004.0,Atlético de San Luis
+Emanuel Emegha,2003.0,4814.0,"Chelsea, Strasbourg",,Umeh Emmanuel,1068245.0,81.5,2004.0,FC Zürich,Emmanuel Mensah,1063914.0,75.9,2004.0,CFR Cluj,Emmanuel Ogura,659225.0,71.4,2002.0,Randers FC
+Isaac Carcelen,1993.0,4810.0,Cádiz,,Iza Carcelén,254037.0,84.6,1993.0,Cádiz CF,Isaac Cissé,325175.0,64.0,1994.0,Vitória Guimarães SC,Aurélien Ngeyitala,170555.0,62.5,1994.0,Arsenal Kyiv
+Pedro,1987.0,4798.0,Lazio,,Pedro,65278.0,100.0,1987.0,Società Sportiva Lazio S.p.A.,Pedró,210057.0,100.0,1987.0,Gil Vicente FC,Pedro Ken,52514.0,71.4,1987.0,RFK Akhmat Grozny
+Leandro Barreiro Martins,2000.0,4747.0,Mainz 05,,Leandro Barreiro,357233.0,80.0,2000.0,SL Benfica,Martín Barrios,565981.0,68.4,1999.0,Club Atlético Platense,Emiliano Martínez,707447.0,63.4,1999.0,Sociedade Esportiva Palmeiras
+Urko González,2001.0,4689.0,"Espanyol, Real Sociedad",,Rober González,505675.0,81.5,2001.0,NEC Nijmegen,Ramón González,1043035.0,81.5,2002.0,Asociación de Fomento Deportivo Riestra Barrio Colón,Nico González,466805.0,76.9,2002.0,Manchester City
+Kialonda,1997.0,4488.0,Lecce,,Iago Indias,356196.0,63.2,1996.0,RCD Espanyol Barcelona,Italo,987568.0,61.5,1997.0,Jeju SK Football Club,Mads Kaalund,281492.0,60.0,1996.0,Hvidovre IF
+Hamed Junior Traorè,2000.0,4441.0,"Auxerre, Bournemouth, Genoa, Marseille, Napoli, Sassuolo",,Hamed Traoré,391065.0,77.4,2000.0,Olympique Marseille,Júnior Almeida,796739.0,66.7,2000.0,CF Estrela Amadora,Loué Bayere Junior,678101.0,64.9,2001.0,FK Javor-Matis Ivanjica
+Willian,1988.0,4436.0,Fulham,,Willian,52769.0,100.0,1988.0,Grêmio Foot-Ball Porto Alegrense,William Alves,83757.0,60.0,1987.0,Vitória Setúbal FC,Islam Slimani,174915.0,60.0,1988.0,CFR Cluj
+Michael Amir Murillo,1996.0,4423.0,Marseille,,Amir Murillo,354482.0,75.0,1996.0,Olympique Marseille,Michael Rose,154219.0,62.5,1995.0,Aberdeen FC,Michael Phillips,378629.0,61.1,1997.0,Crystal Palace
+Luiz Lúcio Reis Júnior,2001.0,4338.0,Villarreal,,Luiz Júnior,712107.0,66.7,2001.0,Villarreal CF,Vinicius Junior,371998.0,59.5,2000.0,Real Madrid,Junior Kadile,585958.0,57.1,2002.0,Servette FC
+Patric,1993.0,4295.0,Lazio,,Patric,126729.0,100.0,1993.0,Società Sportiva Lazio S.p.A.,Patrick,333159.0,92.3,1992.0,Clube do Remo,Patrick,552534.0,92.3,1993.0,SC Otelul Galati
+Emerson,1999.0,4273.0,"Milan, Tottenham",,Emerson,687347.0,100.0,1999.0,V-Varen Nagasaki,Éderson,607854.0,85.7,1999.0,Atalanta BC,Jamerson,613641.0,80.0,1998.0,Esporte Clube Vitória
+Nicolás González,2002.0,4231.0,"Manchester City, Newcastle, Valencia",,Nico González,466805.0,89.7,2002.0,Manchester City,Tomás González,989579.0,80.0,2003.0,Asociación de Fomento Deportivo Riestra Barrio Colón,Matías González,831492.0,77.4,2002.0,Volou Neos Podosferikos Syllogos
+Francisco Perez,2002.0,4152.0,"Rayo Vallecano, Valencia",,Francisco Perruzzi,963139.0,84.8,2001.0,Club Atlético San Lorenzo de Almagro,Fran Pérez,622988.0,80.0,2002.0,Rayo Vallecano,Francisco Petrasso,985683.0,78.8,2002.0,Rio Ave FC
+Jordan Pefok,1996.0,4093.0,"Gladbach, Reims, Union Berlin",,Jordan Lee,416621.0,72.7,1996.0,AFC Bournemouth,Jordan Renson,385839.0,72.0,1996.0,Sint-Truidense VV,Jordan Tell,272644.0,69.6,1997.0,Clermont Foot 63
+Douglas,1997.0,4079.0,Nantes,,Douglas Luiz,447661.0,73.7,1998.0,Nottingham Forest,Douglas Abner,349962.0,70.0,1996.0,Boavista FC,Douglas Augusto,393621.0,63.6,1997.0,FK Krasnodar
+Óscar Rodríguez Arnaiz,1998.0,4072.0,"Celta Vigo, Getafe, Leganés",,Óscar Rodríguez,284884.0,81.1,1998.0,CD Leganés,Mario Rodríguez,251888.0,75.7,1997.0,Granada CF,Carlos Rodríguez,534620.0,73.7,1997.0,CD Cruz Azul
+Boubakar Kouyaté,1997.0,3940.0,Montpellier,,Aboubakary Koita,422377.0,75.0,1998.0,Athlitiki Enosi Konstantinoupoleos,Aboubakar Keita,294807.0,71.0,1997.0,Royal Charleroi Sporting Club,Asumah Abubakar,408438.0,64.5,1997.0,Brisbane Roar
+Ezequiel Ávila,1994.0,3928.0,"Osasuna, Real Betis",,Ezequiel Bonifacio,334224.0,68.8,1994.0,Club Sportivo Independiente Rivadavia,Ezequiel Ham,321612.0,61.5,1994.0,Club Atlético Tucumán,Ilya Zuev,181190.0,60.9,1994.0,AO FK Zenit Sankt-Peterburg
+Oliver McBurnie,1996.0,3913.0,"Hull City, Las Palmas, Sheffield United",,Oli McBurnie,298477.0,88.9,1996.0,UD Las Palmas,Oliver Burke,341317.0,81.5,1997.0,1.FC Union Berlin,Bruno Oliveira,552810.0,69.0,1996.0,Gwangju Football Club
+Jorginho,1991.0,3759.0,"Arsenal, Chelsea",,Jorginho,102017.0,100.0,1991.0,Clube de Regatas do Flamengo,Serginho,167976.0,75.0,1991.0,FC Arouca,Romarinho,193925.0,70.6,1990.0,Esporte Clube Vitória
+Abdulai Juma Bah,2006.0,3696.0,"Augsburg, Lens, Nice, Valladolid",,Abdullahi Umar,1405829.0,73.3,2007.0,FC Hradec Kralove,Jalal Abdullai,1152491.0,66.7,2005.0,Molde Fotballklubb,Juma Bah,1121298.0,66.7,2006.0,OGC Nice
+Karl Jakob Hein,2002.0,3690.0,"Arsenal, Valladolid, Werder Bremen",,Karl Hein,493513.0,75.0,2002.0,SV Werder Bremen,Emir Köksal,667392.0,61.5,2001.0,Fenerbahce,Kewin Komar,605779.0,61.5,2003.0,Puszcza Niepolomice
+Babis Lykogiannis,1993.0,3687.0,Bologna,,Charalampos Lykogiannis,136514.0,70.0,1993.0,Bologna Football Club 1909,Georgios Zygogiannis,233268.0,64.9,1994.0,Panionios Athens,Giannis Gelios,156676.0,64.5,1992.0,Athens Kallithea
+Pedro Díaz,1998.0,3586.0,Rayo Vallecano,ambiguous,Pedro Díaz,363057.0,100.0,1998.0,Rayo Vallecano,Pedro Díaz,653363.0,100.0,1998.0,,Adrià Pedrosa,501418.0,78.3,1998.0,Elche CF
+Valentin Atangana Edoa,2005.0,3583.0,Reims,,Valentin Atangana,923759.0,87.2,2005.0,Al-Ahli Saudi Football Club,Valentino Acuña,1074966.0,64.9,2006.0,Club Atlético Newell’s Old Boys,Valentín Barco,849410.0,61.1,2004.0,RC Strasbourg Alsace
+Adrián de la Fuente,1999.0,3431.0,Levante,,Adrián Dela,341263.0,73.3,1999.0,Levante UD,Adrian Fein,379979.0,66.7,1999.0,Excelsior Rotterdam,Adrián Tellado,548618.0,66.7,1999.0,Real Betis Balompié
+Diego Gómez,2003.0,3419.0,Brighton,ambiguous,Diego Gómez,971398.0,100.0,2003.0,Club Necaxa,Diego Gómez,996897.0,100.0,2003.0,Brighton & Hove Albion,Diego López,617081.0,81.8,2002.0,Valencia CF
+Nacho,1990.0,3383.0,Real Madrid,,Dani Pacheco,28285.0,58.8,1991.0,Wisla Plock,Bruno Pacheco,435163.0,55.6,1991.0,Associação Chapecoense de Futebol,Maicón,70484.0,54.5,1990.0,Antalyaspor
+Liam Henderson,1996.0,3349.0,Empoli,ambiguous,Liam Henderson,193867.0,100.0,1996.0,FC Empoli,Liam Henderson,328429.0,100.0,1996.0,Falkirk FC,Elias Andersson,229616.0,75.9,1996.0,Lech Poznan
+Elba Rashani,1993.0,3337.0,Clermont Foot,,Elbasan Rashani,149579.0,88.9,1993.0,Melbourne City FC,Amir Rrahmani,257732.0,64.0,1994.0,SSC Napoli,Abdul Rahman Baba,224884.0,62.1,1994.0,Panthessalonikios Athlitikos Omilos Konstantinoupoliton
+David Costa,2001.0,3253.0,Lens,,David Da Costa,719442.0,88.0,2001.0,Portland Timbers,Davide Costanzo,618505.0,84.6,2002.0,SSC Napoli,David Colina,371000.0,78.3,2000.0,NK Osijek
+Danny Loader,2000.0,3232.0,Auxerre,,Denny Gropper,624717.0,64.0,1999.0,,Geo Danny Ekra,647831.0,61.5,1999.0,Olimpik Donetsk,Louie Annesley,405563.0,61.5,2000.0,
+Ruan,1999.0,3227.0,Sassuolo,,Ruan,555015.0,100.0,1999.0,Clube Atlético Mineiro,Luan,574904.0,75.0,1999.0,São Paulo Futebol Clube,Juan Cruz,585700.0,61.5,2000.0,CD Leganés
+Silas Katompa,1998.0,3226.0,"Mainz 05, Stuttgart",,Silas Gnaka,481091.0,66.7,1998.0,KAS Eupen,Nathan Silva,440652.0,64.0,1997.0,UNAM Pumas,Mattias Käit,205227.0,64.0,1998.0,FC Thun
+Iago,1997.0,3222.0,Augsburg,,Iago,520468.0,100.0,1997.0,Esporte Clube Bahia,Italo,987568.0,66.7,1997.0,Jeju SK Football Club,Inácio,460125.0,60.0,1996.0,Portimonense SC
+Nathan N'Goumou,2000.0,3159.0,"Gladbach, Nice, Toulouse",,Nathan Ferguson,507254.0,73.3,2000.0,Crystal Palace,Jonathan Amon,542776.0,71.4,1999.0,Vejle Boldklub,Jonathan Bumbu,694498.0,69.0,1999.0,Amiens SC
+Jofre,2001.0,3116.0,Espanyol,,Josh Rae,316306.0,61.5,2000.0,St. Johnstone FC,Josh Reid,554365.0,57.1,2002.0,Ross County FC,Forster Ajago,1215289.0,55.6,2001.0,Real Salt Lake
+Wesley,2003.0,3093.0,Roma,,Wesley,964580.0,100.0,2003.0,Associazione Sportiva Roma,Joe Westley,937845.0,70.6,2004.0,Dundee FC,Wesley Pomba,574774.0,66.7,2002.0,NK Veres Rivne
+Srđan Babić,1996.0,3088.0,Almería,,Srdjan Babic,222805.0,87.0,1996.0,FK Spartak Moskva,Franck Bambock,182882.0,64.0,1995.0,Panetolikos Agrinio,Srdjan Plavsic,322800.0,64.0,1995.0,FC Baník Ostrava a.s.
+Danilo Santos,2001.0,3043.0,Nottingham,,Daniel Dos Santos,608212.0,86.7,2002.0,FC Lugano,Danilo Ventola,401802.0,74.1,2000.0,Genoa CFC,Danil Stepanov,456182.0,74.1,2000.0,FC Khimki (-2025)
+Kostas Tsimikas,1996.0,3009.0,"Liverpool, Roma",,Konstantinos Tsimikas,338070.0,83.3,1996.0,Associazione Sportiva Roma,Domantas Šimkus,214264.0,66.7,1996.0,,Justas Lasickas,345311.0,66.7,1997.0,HNK Rijeka
+Sergi,1992.0,2957.0,Leganés,,Serginho,167976.0,76.9,1991.0,FC Arouca,Sergiu Buș,123671.0,66.7,1992.0,FC Hermannstadt,Berg,279255.0,66.7,1992.0,Lierse SK (- 2018)
+Juanpe,1991.0,2899.0,Girona,,Juanpe,115333.0,100.0,1991.0,Atlético de San Luis,Tijane,191813.0,66.7,1991.0,GD Estoril Praia,Juankar,126625.0,61.5,1990.0,Aris Thessalonikis
+Alejandro Pozo Pozo,1999.0,2856.0,Almería,,Alexandru Pop,434892.0,68.8,2000.0,FC Dinamo 1948,Leandro Lozano,665101.0,66.7,1998.0,Club Atlético Boca Juniors,Aleksandar Popovic,591510.0,64.9,1998.0,FK Tekstilac Odzaci
+Juan David Cabal,2001.0,2833.0,"Hellas Verona, Juventus",,Juan Cabal,686965.0,76.9,2001.0,Juventus FC,David Ayala,920611.0,66.7,2000.0,Tigres UANL,David Ayala,661094.0,66.7,2002.0,Club Internacional de Fútbol Miami
+Lucas Oliveira Rosa,2000.0,2821.0,Valladolid,,Lucas Rosa,468309.0,69.0,2000.0,Ajax Amsterdam,Lucas Ribeiro,605893.0,68.8,1999.0,TSG 1899 Hoffenheim,Ruan Oliveira,798106.0,68.8,2000.0,Zorya Lugansk
+Eli Junior Kroupi,2006.0,2791.0,"Bournemouth, Lorient",,Junior Kroupi,955357.0,86.7,2006.0,AFC Bournemouth,Robinho Junior,1355385.0,64.5,2007.0,Santos Futebol Clube,Junior Koné,1306607.0,64.3,2007.0,FC Nantes
+Heorhii Tsitaishvili,2000.0,2767.0,"Metz, Rayo Vallecano",,Giorgi Tsitaishvili,419067.0,82.1,2000.0,FC Metz,Giorgi Guliashvili,502682.0,63.2,2001.0,,Anzor Mekvabishvili,502671.0,56.4,2001.0,Universitatea Craiova
+Luiz Felipe,1997.0,2715.0,"Marseille, Rayo Vallecano, Real Betis",ambiguous,Luiz Felipe,457931.0,100.0,1997.0,Rayo Vallecano,Luiz Felipe,573907.0,100.0,1997.0,SC Farense,Felipe Vizeu,425462.0,78.3,1997.0,RFK Akhmat Grozny
+Fabinho,1993.0,2671.0,Liverpool,,Fabinho,225693.0,100.0,1993.0,Al-Ittihad Football Club,Fabinho,292749.0,100.0,1994.0,CD Feirense,Betinho,149717.0,71.4,1993.0,CF Os Belenenses
+Gio Reyna,2002.0,2650.0,"Dortmund, Gladbach, Nottingham, Strasbourg",,Giovanni Reyna,504215.0,78.3,2002.0,Borussia Dortmund,Renato Júnior,796726.0,63.6,2002.0,Viborg FF,Gibson Yah,559325.0,63.2,2003.0,FC Volendam
+Pierre Ekwah Elimby,2002.0,2632.0,"Auxerre, Saint-Étienne",,Pierre Ekwah,538994.0,77.4,2002.0,AS Saint-Étienne,Kayden Pierre,806614.0,62.5,2003.0,KRC Genk,Pierre Landry Kaboré,649453.0,61.5,2001.0,Heart of Midlothian FC
+Abdoul Coulibaly,2007.0,2600.0,"Strasbourg, Werder Bremen",,Baye Coulibaly,1132631.0,73.3,2006.0,Charlotte Football Club,Abdoulaye Doumbia,1519157.0,66.7,2007.0,BK Häcken,Abdoulie Tamba,1446018.0,60.0,2006.0,IFK Norrköping
+Daniel Ballard,1999.0,2599.0,Sunderland,,Dan Ballard,503686.0,88.0,1999.0,Sunderland AFC,Daniel Baur,293648.0,80.0,1999.0,Heart of Midlothian FC,Daniels Balodis,342151.0,75.9,1998.0,
+Zé Pedro Figueiredo,1997.0,2482.0,Cagliari,,João Figueiredo,439343.0,70.6,1996.0,,Pedro Ferreira,337799.0,60.6,1998.0,CD Santa Clara,Zé Pedro,344541.0,59.3,1997.0,UTA Arad
+Florentino Luís,1999.0,2423.0,"Burnley, Ipswich Town",,Florentino,357162.0,80.0,1999.0,Burnley FC,Gabriel Florentín,675341.0,68.8,1999.0,Asociación Atlética Argentinos Juniors,Florent Muslija,337036.0,66.7,1998.0,Fortuna Düsseldorf
+Mohamed Lamine Bayo,1998.0,2349.0,"Le Havre, Lille",,Mohamed Bayo,594991.0,77.4,1998.0,Gaziantep FK,Mohamed Badamosi,369384.0,74.3,1998.0,CFR Cluj,Mohamed Alaa,1307898.0,71.0,1999.0,
+Cheikh Tidiane Sabaly,1999.0,2346.0,Metz,,Cheikh Sabaly,568696.0,76.5,1999.0,FC Metz,Cheikh Diaby,592988.0,60.6,2000.0,West Bromwich Albion,Cheikh Niasse,644032.0,58.8,2000.0,Hellas Verona
+Vitinho,1999.0,2314.0,Burnley,,Vitinho,323944.0,100.0,1998.0,Red Bull Bragantino,Vitinho,468249.0,100.0,1999.0,S. A. F. Botafogo,Vitinho,670965.0,100.0,1999.0,Sport Club Internacional
+Gabriel Veiga,2002.0,2312.0,Celta Vigo,ambiguous,Gabriel Vega,906749.0,96.0,2002.0,Club Atlético Banfield,Gabri Veiga,699704.0,91.7,2002.0,FC Porto,Gabriel Segal,610629.0,84.6,2001.0,D.C. United
+Anthony Lozano,1993.0,2307.0,"Almería, Cádiz, Getafe",,Anthony Baron,624910.0,74.1,1992.0,Servette FC,Anthony Koura,127098.0,74.1,1993.0,AS Nancy-Lorraine,Anthony O'Connor,121393.0,73.3,1992.0,Aberdeen FC
+Oliver Nielsen,2003.0,2290.0,Lazio,,Oliver Jensen,569639.0,81.5,2002.0,Randers FC,Oliver Jones,888517.0,76.9,2003.0,Randers FC,Olivier Aertssen,720791.0,73.3,2004.0,PEC Zwolle
+Otavio Ataide,2002.0,2290.0,Paris FC,,Otávio,818495.0,63.2,2002.0,Paris FC,Ryotaro Araki,566011.0,61.5,2002.0,Kashima Antlers FC,Taiga Hata,570572.0,60.9,2002.0,Sint-Truidense VV
+Orri Steinn Óskarsson,2004.0,2283.0,Real Sociedad,,Orri Óskarsson,660438.0,80.0,2004.0,Real Sociedad,Felix Eriksson,931834.0,57.1,2004.0,Idrottsföreningen Kamraterna Göteborg,Karl Steinmann,907082.0,57.1,2005.0,SC Freiburg
+Joaquín Martínez Gauna,2003.0,2282.0,"Sevilla, Strasbourg",,Johan Martínez,1053759.0,72.2,2002.0,Deportivo Cali,Arnau Martínez,826224.0,72.2,2003.0,Girona FC,Julián Martínez,1105188.0,70.3,2003.0,FC Alverca
+Mbwana Samatta,1992.0,2235.0,Le Havre,,Mattia Bani,176139.0,72.0,1993.0,Genoa CFC,Ally Samatta,182201.0,69.2,1992.0,Le Havre AC,Matthias Maak,102271.0,66.7,1992.0,Sönderjyske Fodbold
+Mathias Jørgensen,1990.0,2190.0,Brentford,,Mathias Larsen,69644.0,77.4,1991.0,Bröndby IF,Marco Priis Jörgensen,335563.0,68.4,1991.0,FC Midtjylland,Nicolai Jörgensen,100399.0,64.7,1991.0,FC Copenhagen
+Carlos Benavídez,1998.0,2189.0,Alavés,,Carlos Alves,337795.0,71.4,1998.0,Rio Ave FC,Carlos Baltazar,560325.0,64.5,1997.0,Puebla FC,Mario Hernández,608531.0,64.5,1999.0,Rayo Vallecano
+Filip Đuričić,1992.0,2171.0,Sampdoria,,Filip Rogic,217069.0,75.0,1993.0,FC Orenburg,Filip Kurto,104376.0,66.7,1991.0,Macarthur FC,Filip Markovic,161356.0,66.7,1992.0,Royal Excel Mouscron (-2022)
+Álex Centelles,1997.0,2103.0,Almería,,Àlex Carbonell,262389.0,71.4,1997.0,Almere City FC,Pelle Clement,297693.0,66.7,1996.0,Sparta Rotterdam,Álex Zendejas,351505.0,66.7,1998.0,CF América
+Emersonn,2004.0,2099.0,"Ipswich Town, Toulouse",,Emersonn,743599.0,100.0,2004.0,Göztepe,Petterson,978057.0,70.6,2004.0,Esporte Clube Juventude,Weverton,668262.0,62.5,2003.0,Kyoto Purple Sanga
+Francesco Esposito,2005.0,2076.0,Inter,,Francesco D'Alessio,723614.0,81.1,2004.0,Associazione Sportiva Roma,Francesco Coppola,925838.0,68.6,2005.0,Pisa Sporting Club,Francesco Fiorelli,1295762.0,66.7,2004.0,Alianza FC
+Fernando,1987.0,2036.0,Sevilla,,Fernando,254761.0,100.0,1986.0,,Fernando,51174.0,100.0,1987.0,Sport Club Internacional,Fernandão,83886.0,94.1,1987.0,Fenerbahce
+Monchu,1999.0,2031.0,Valladolid,,Monchu,282727.0,100.0,1999.0,FC Juárez,Franchu,458466.0,61.5,1998.0,Real Madrid,Bogdan Chuev,539435.0,55.6,2000.0,FC Minaj
+Samu Omorodion,2004.0,1998.0,"Alavés, Granada",,Mario Sauer,710885.0,64.0,2004.0,FC Toulouse,Imari Samuels,565846.0,59.3,2003.0,Dundee FC,Omar Shami,1250543.0,58.3,2004.0,Al-Raed SFC
+David Silva,1986.0,1937.0,Real Sociedad,ambiguous,David Silva,35518.0,100.0,1986.0,Real Sociedad,David Silva,74071.0,100.0,1986.0,Millonarios FC,David Silva,86759.0,100.0,1986.0,Kilmarnock FC
+Rahim Bonkano,2002.0,1932.0,"Bologna, Oviedo",,Ibrahima Fofana,666922.0,64.3,2002.0,Hammarby IF,Ibrahim Cissoko,575693.0,64.3,2003.0,FC Toulouse,Ryuma Nakano,686441.0,64.0,2002.0,Kyoto Purple Sanga
+Igor Carioca,1996.0,1931.0,Lorient,,Edson Carioca,794925.0,72.0,1997.0,Mirasol Futebol Clube,Tiago Castro,358200.0,66.7,1996.0,Vitória Setúbal FC,Grigoris Chandrinos,284486.0,64.5,1995.0,AOK Kerkyra
+Rubén,2001.0,1913.0,"Elche, Espanyol",,Rubens,843397.0,90.9,2001.0,FK Dinamo Moskva,Rúben Pina,647132.0,66.7,2000.0,,Ruben Alte,797945.0,66.7,2000.0,Sandefjord Fotball
+Tetê,2000.0,1841.0,"Leicester City, Lyon",,Tetê,371256.0,100.0,2000.0,Panathinaikos Athlitikos Omilos,Tete Yengi,849429.0,57.1,2000.0,Livingston FC,Kion Etete,624967.0,57.1,2001.0,St. Mirren FC
+Brugui,1996.0,1834.0,Levante,,Bruninho,483451.0,57.1,1997.0,Zirka Kropyvnytskyi,Bruno Guimarães,520624.0,57.1,1997.0,Newcastle United,Roger Brugué,557057.0,55.6,1996.0,Levante UD
+Finn Ole Becker,2000.0,1789.0,Hoffenheim,,Finn Becker,334999.0,84.6,2000.0,TSG 1899 Hoffenheim,Tijn Becker,642380.0,69.2,2001.0,Fortuna Sittardia Combinatie,Roler Ferrufino,491678.0,60.0,2000.0,
+Dapo Afolayan,1997.0,1789.0,St Pauli,,Oladapo Afolayan,487850.0,89.7,1997.0,FC St. Pauli,Alassane Ndao,569777.0,69.2,1996.0,Konyaspor,Abdoulaye Diallo,415271.0,62.1,1996.0,Desportivo Aves (- 2020)
+Miguel Ángel Rubio,1998.0,1766.0,"Espanyol, Granada",,Miguel Rubio,583510.0,80.0,1998.0,RCD Espanyol Barcelona,Ángelo Martino,471641.0,62.5,1998.0,Club Atlético Newell’s Old Boys,Miguel Reisinho,478366.0,60.6,1999.0,Boavista FC
+Dion Drena Beljo,2002.0,1709.0,Augsburg,,Dion Beljo,618350.0,76.9,2002.0,GNK Dinamo Zagreb,Eldon Reneau,954024.0,71.4,2003.0,,Elidon Qenaj,741149.0,64.3,2003.0,1. Fußballclub Heidenheim 1846
+Reinier,2002.0,1706.0,"Frosinone, Girona",,Reinier,627226.0,100.0,2002.0,Clube Atlético Mineiro,Renyer,668236.0,76.9,2003.0,Pogon Szczecin,Renê,1093951.0,72.7,2003.0,Esporte Clube Vitória
+Youssef Lekhedim,2005.0,1699.0,"Alavés, Real Madrid",,Youssef Chermiti,670688.0,68.8,2004.0,Everton FC,Youssef Enríquez,741289.0,62.5,2005.0,Deportivo Alavés,Youssef El Tahan,1145323.0,62.5,2006.0,Al-Nassr Football Club
+Cheick Konaté,2004.0,1640.0,Clermont Foot,,Cheick Oumar Konaté,1108145.0,81.2,2004.0,Athlitiki Enosi Kifisias,Check Keita,820146.0,66.7,2003.0,Royal Charleroi Sporting Club,Cheick Doumbia,918302.0,66.7,2004.0,Le Havre AC
+Marlon,1995.0,1592.0,Monza,,Marlon,273236.0,100.0,1995.0,FC Shakhtar Donetsk,Mailson,515496.0,76.9,1996.0,Al-Taawoun Football Club,Warleson,477460.0,71.4,1996.0,Cercle Brugge
+Neymar,1992.0,1545.0,Paris SG,,Neymar,68290.0,100.0,1992.0,Santos Futebol Clube,Omar Colley,174733.0,58.8,1992.0,Panthessalonikios Athlitikos Omilos Konstantinoupoliton,Ken Sema,252345.0,57.1,1993.0,
+Jailson Siqueira,1995.0,1511.0,Celta Vigo,,Marlon Sierra,550755.0,69.0,1994.0,Llaneros FC,Juan Mosquera,312732.0,69.0,1996.0,CS Marítimo,Leonardo Sequeira,384761.0,66.7,1995.0,Club Atlético Huracán
+Ezequiél Fernández,2002.0,1488.0,Leverkusen,,Equi Fernández,664708.0,87.5,2002.0,Bayer 04 Leverkusen,Emmanuel Fernandez,807417.0,77.8,2001.0,Rangers FC,Ezequiel Forclaz,981479.0,76.5,2003.0,Asociación Atlética Estudiantes
+Hannibal Mejbri,2003.0,1466.0,"Burnley, Manchester Utd, Sevilla",,Hannibal,607224.0,69.6,2003.0,Burnley FC,Danial Eiri,1080301.0,69.2,2003.0,,Daniel Macej,671543.0,59.3,2004.0,Frosinone Calcio
+Faustino Anjorin,2001.0,1403.0,"Empoli, Torino",,Tino Anjorin,433181.0,85.7,2001.0,Torino FC,Martín Satriano,640109.0,64.5,2001.0,Getafe CF,Jordi Martín,537763.0,64.3,2001.0,Getafe CF
+Hernani,1994.0,1400.0,Parma,,Hernani,181768.0,100.0,1994.0,Parma Calcio 1913,Fernandinho,230937.0,66.7,1993.0,GD Estoril Praia,Iker Hernández,162043.0,66.7,1994.0,Real Sociedad
+Dehmaine Assoumani,2005.0,1374.0,Nantes,,Khulumani Ndamane,1283140.0,62.9,2004.0,,Muzdhan Hassan,1322279.0,62.5,2006.0,,Dante Cassanova,738269.0,60.6,2004.0,Tottenham Hotspur
+João Mário Lopes,2000.0,1357.0,"Bologna, Fiorentina, Juventus",,João Mário,537602.0,76.9,2000.0,Juventus FC,João Pedro,862924.0,69.2,1999.0,Kyoto Purple Sanga,João Pedro,626724.0,69.2,2001.0,Chelsea FC
+Chuky san jose,2004.0,1348.0,"Valladolid, Werder Bremen",,Stepan Machu,724029.0,61.5,2004.0,FK Pardubice,José Santoyo,1100059.0,61.5,2005.0,Club Necaxa,Stepan Chaloupek,944827.0,60.0,2003.0,SK Slavia Prague
+Alexandre Alemão,1998.0,1331.0,Rayo Vallecano,,Alexander Abrahamsson,405774.0,64.9,1999.0,Idrottsföreningen  Brommapojkarna,Alejandro Meléndez,531413.0,64.7,1999.0,Real Betis Balompié,Alexander,668799.0,64.0,1999.0,Club de Regatas Vasco da Gama
+Antoniu,2002.0,1311.0,Espanyol,,Anthoni,869437.0,85.7,2002.0,Sport Club Internacional,Antony,798687.0,76.9,2001.0,Portland Timbers,Antoniu Roca,834744.0,73.7,2002.0,RCD Espanyol Barcelona
+Norman Theuerkauf,1987.0,1281.0,Heidenheim,,Emanuel Herrera,139955.0,56.2,1987.0,Montpellier HSC,Manuel Neuer,17259.0,55.2,1986.0,Bayern Munich,Oguzhan Türk,24523.0,55.2,1986.0,Gaziantepspor (- 2020)
+Memphis,1994.0,1277.0,"Atlético Madrid, Barcelona",,Memphis Depay,167850.0,70.0,1994.0,Sport Club Corinthians Paulista,Messias,401539.0,57.1,1994.0,Rio Ave FC,Reis,243654.0,54.5,1993.0,Gwangju Football Club
+Rafel Obrador,2004.0,1255.0,"Sassuolo, Torino",,Rafa Obrador,646747.0,88.0,2004.0,Torino FC,João Rafael,1220179.0,75.0,2005.0,Clube Atlético Mineiro,Rafael Alcobia,916954.0,66.7,2003.0,Portimonense SC
+Fred,1993.0,1249.0,Manchester Utd,,Fred,191614.0,100.0,1993.0,Fenerbahce,Fredy Pérez,379880.0,53.3,1994.0,,Fernando,105456.0,50.0,1992.0,Antalyaspor
+Jáder Durán,2003.0,1249.0,Aston Villa,,Jhon Durán,649317.0,66.7,2003.0,Fenerbahce,Maïdine Douane,512690.0,64.0,2002.0,FC Metz,Nazareno Durán,1157436.0,64.0,2004.0,Club Atlético Huracán
+Nico Ribaudo,2001.0,1248.0,Espanyol,,Nicola Rauti,417896.0,66.7,2000.0,Torino FC,Ivor Ribar,926263.0,63.6,2002.0,NK Lokomotiva Zagreb,Jannick Liburd,610603.0,61.5,2001.0,Sönderjyske Fodbold
+Al-Musrati,1996.0,1230.0,"Hellas Verona, Monaco",,Ali Nemati,527092.0,70.0,1996.0,,Moatasem Al-Musrati,377641.0,69.0,1996.0,Beşiktaş Jimnastik Kulübü,Murat Hocaoglu,282575.0,66.7,1995.0,Fenerbahce
+Ifechukwu Ogbus,2005.0,1196.0,Freiburg,,Izuchukwu Okonkwo,1286066.0,56.2,2006.0,SK Slavia Prague,Ikechukwu Ifeanyi,1376277.0,56.2,2006.0,FK Spartak Subotica,Sohgo Ichikawa,818222.0,55.2,2004.0,
+Diego,2000.0,1195.0,Leganés,,Diego Luna,490496.0,66.7,2000.0,FK Baltika,Diego Luna,798508.0,66.7,2001.0,Club León FC,Igor Diveev,532732.0,62.5,1999.0,PFK CSKA Moskva
+Lyanco,1997.0,1180.0,Southampton,,Lyanco,379807.0,100.0,1997.0,Clube Atlético Mineiro,Juancho,368635.0,61.5,1996.0,Rayo Vallecano,Lincoln,351738.0,61.5,1998.0,FC Alverca
+Bahereba Guirassy,2006.0,1169.0,Nantes,,Gui Beleza,1292845.0,59.3,2006.0,Gil Vicente FC,Lukas Baert,1070395.0,57.1,2005.0,KV Mechelen,Alpha Turay,1072392.0,57.1,2005.0,FK Radnicki 1923 Kragujevac
+Mariano,1993.0,1168.0,"Alavés, Real Madrid, Sevilla",,Marcão,160188.0,76.9,1992.0,Esporte Clube Juventude,Marcão,476102.0,76.9,1994.0,Ulsan Hyundai Football Club,Romarinho,267849.0,75.0,1994.0,Sport Club do Recife
+Mateusz Łęgowski,2003.0,1145.0,Salernitana,,Mateusz Musialowski,570469.0,74.3,2003.0,Liverpool FC,Mateusz Stępień,555112.0,64.5,2002.0,Puszcza Niepolomice,Bartosz Brylowski,708427.0,60.6,2004.0,Lechia Gdansk
+Peter González,2002.0,1126.0,"Getafe, Valencia",,Rober González,505675.0,78.6,2001.0,NEC Nijmegen,Gonzalo Pérez,799594.0,74.1,2001.0,Club Atlético Lanús,Jair González,686447.0,74.1,2002.0,Santos Laguna
+Kevin,2003.0,1121.0,Fulham,,Kevin,900195.0,100.0,2003.0,FC Shakhtar Donetsk,Kévin Boma,709727.0,66.7,2002.0,GD Estoril Praia,Kevyson,1032891.0,66.7,2004.0,Santos Futebol Clube
+Ângelo,2004.0,1094.0,Strasbourg,,Ângelo,743598.0,100.0,2004.0,Al-Nassr Football Club,Rangel,980767.0,83.3,2004.0,Al-Fayha FC,Ange Lago,1117771.0,80.0,2004.0,Olympique Marseille
+Abdul Fatawu Issahaku,2004.0,1092.0,"Ipswich Town, Leicester City",,Abdul Fatawu,864121.0,72.7,2004.0,Leicester City,Abdul Faisal,1110942.0,66.7,2005.0,Central Coast Mariners,Abdulrahman Sahhari,1373259.0,60.0,2005.0,Al-Ettifaq Football Club
+Jaden Philogene Bidace,2002.0,1054.0,"Aston Villa, Ipswich Town",,Jaden Philogene,665390.0,81.1,2002.0,Aston Villa,Dae-kwang Lee,1106943.0,57.1,2003.0,Suwon FC,Adnane Abid,583899.0,54.5,2003.0,Standard Liège
+Mamadou Mbaye,1998.0,1048.0,Cádiz,,Mendy Mamadou,573111.0,76.9,1998.0,Istanbulspor,Ahmadou Dia,611673.0,66.7,1999.0,Olympique Marseille,Mouhamadou Sarr,338101.0,64.3,1997.0,US Cremonese
+Kostas Stafylidis,1993.0,1043.0,Bochum,,Konstantinos Stafylidis,148967.0,85.0,1993.0,VfL Bochum,Kosmas Tsilianidis,243302.0,68.6,1994.0,PAS Lamia 1964,Konstantinos Kotsaridis,77471.0,65.0,1992.0,Aris Thessalonikis
+Unai Vencedor Paris,2000.0,1005.0,"Athletic Club, Levante",,Unai Vencedor,610083.0,81.2,2000.0,Levante UD,Cain Seedorf,473170.0,58.1,2000.0,ADO Den Haag,Bayli Spencer-Adams,533083.0,57.9,2001.0,Watford FC
+Lázaro,2002.0,1001.0,Almería,,Lázaro,574772.0,100.0,2002.0,Al-Najma Sport Club,Luizão,894531.0,66.7,2002.0,Pogon Szczecin,Lazar Mijovic,724664.0,63.2,2003.0,FK Cukaricki
+Alfonso Herrero,1994.0,990.0,Málaga,,Afonso Figueiredo,237000.0,68.8,1993.0,Moreirense FC,Gastón Pereiro,264116.0,62.1,1995.0,Genoa CFC,João Afonso,224878.0,61.5,1995.0,CS Marítimo
+Estêvão Willian,2007.0,987.0,Chelsea,,Scott Williamson,1161845.0,64.5,2007.0,Motherwell FC,William Feola,927906.0,64.3,2006.0,Hellas Verona,William Gomes,1004725.0,64.3,2006.0,FC Porto
+Łukasz Poręba,2000.0,980.0,"Elversberg, Lens",,Sorba Thomas,475416.0,56.0,1999.0,Stoke City,Lukas Krüger,448092.0,56.0,2000.0,RB Leipzig,Thomas Ortega,742593.0,53.8,2000.0,Club Sportivo Independiente Rivadavia
+Ali Yousuf,2001.0,969.0,Nantes,,Ali Youssef,501131.0,85.7,2000.0,Mjällby Almänna Idrottsförening,Ali Youssif,944724.0,85.7,2001.0,FC Nantes,Yousuf Al-Malki,1045633.0,80.0,2000.0,
+Mikayil Ngor Faye,2004.0,950.0,"Barcelona, Cremonese, Rennes",,Mikayil Faye,666974.0,82.8,2004.0,Stade Rennais FC,Mame Mor Faye,1111241.0,66.7,2005.0,Caykur Rizespor,Ngal'ayel Mukau,1016015.0,62.5,2004.0,LOSC Lille
+Moanes Dabbur,1992.0,933.0,Hoffenheim,,Munas Dabbur,145866.0,80.0,1992.0,TSG 1899 Hoffenheim,Mohammed Abu,164478.0,64.0,1991.0,Rayo Vallecano,Tomas Dabo,236960.0,60.9,1993.0,FC Arouca
+Rafael Garrido,2004.0,921.0,Málaga,,Rafael Guerrero,971630.0,75.9,2003.0,Tigres UANL,João Rafael,1220179.0,72.0,2005.0,Clube Atlético Mineiro,Rafail Margaritis,896130.0,64.5,2004.0,PAS Lamia 1964
+Ángel Recio,,900.0,Málaga,,,,,,,,,,,,,,,,
