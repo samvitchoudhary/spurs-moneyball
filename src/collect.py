@@ -1,4 +1,8 @@
-"""Download raw scouting inputs from Understat and Transfermarkt."""
+"""Download raw scouting inputs.
+
+FBref is the player-season source used downstream. Understat remains available
+for when that site is back, but it is not called from ``main``.
+"""
 
 from __future__ import annotations
 
@@ -26,6 +30,11 @@ UNDERSTAT_SEASONS = ["2022-23", "2023-24", "2024-25", "2025-26", "2026-27"]
 # Prepared CSVs from dcaribou/transfermarkt-datasets (snapshot through 6 July 2026).
 TRANSFERMARKT_BASE = "https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data"
 TRANSFERMARKT_TABLES = ["players", "player_valuations", "clubs", "transfers"]
+
+# These four pages still return data. passing, defense, and possession do not.
+FBREF_LEAGUES = UNDERSTAT_LEAGUES
+FBREF_SEASONS = UNDERSTAT_SEASONS
+FBREF_STAT_TYPES = ["standard", "shooting", "playing_time", "misc"]
 
 
 def collect_understat(
@@ -83,6 +92,84 @@ def collect_understat(
     return frame
 
 
+def _flatten_columns(frame: pd.DataFrame) -> pd.DataFrame:
+    """Turn a MultiIndex header into single 'Group | Stat' labels."""
+    flat = frame.reset_index()
+    columns = []
+    for column in flat.columns:
+        if isinstance(column, tuple):
+            parts = [str(part) for part in column if str(part) not in {"", "nan"}]
+            columns.append(" | ".join(parts))
+        else:
+            columns.append(str(column))
+    flat.columns = columns
+    return flat
+
+
+def collect_fbref(
+    leagues: list[str] | None = None,
+    seasons: list[str] | None = None,
+    stat_types: list[str] | None = None,
+    out_dir: Path | None = None,
+) -> dict[str, pd.DataFrame]:
+    """Pull FBref player-season pages and save one raw CSV per stat type.
+
+    One league-season is requested at a time, on a single browser, so soccerdata
+    can wait between downloads and reuse ``~/soccerdata/data/FBref``. A page that
+    is already cached is not downloaded again.
+
+    Parameters
+    ----------
+    leagues
+        soccerdata league names. Defaults to the big five.
+    seasons
+        Season labels such as "2025-26". Defaults to 2022-23 through 2026-27.
+    stat_types
+        FBref player pages that still return data.
+    out_dir
+        Directory for ``{stat_type}.csv``. Defaults to data/raw/fbref/.
+    """
+    leagues = leagues or FBREF_LEAGUES
+    seasons = seasons or FBREF_SEASONS
+    stat_types = stat_types or FBREF_STAT_TYPES
+    out_dir = out_dir or RAW_DIR / "fbref"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    reader = sd.FBref(leagues=leagues[0], seasons=seasons[0])
+    tables: dict[str, pd.DataFrame] = {}
+
+    for stat_type in stat_types:
+        pieces = []
+        for league in leagues:
+            for season in seasons:
+                reader._selected_leagues = league
+                reader.seasons = season
+                parsed = reader.seasons[0]
+                cache_path = Path(reader.data_dir) / f"players_{league}_{parsed}_{stat_type}.html"
+                state = "cached" if cache_path.exists() else "downloading"
+                print(f"FBref {stat_type}: {league} {season} ({state})", flush=True)
+                try:
+                    piece = reader.read_player_season_stats(stat_type=stat_type)
+                except KeyError:
+                    print(f"  no FBref season page for {league} {season}", flush=True)
+                    continue
+                if piece.empty:
+                    print(f"  empty table for {league} {season}", flush=True)
+                    continue
+                pieces.append(piece)
+
+        if not pieces:
+            raise RuntimeError(f"FBref returned no rows for {stat_type}.")
+
+        frame = _flatten_columns(pd.concat(pieces))
+        path = out_dir / f"{stat_type}.csv"
+        frame.to_csv(path, index=False)
+        print(f"Wrote {len(frame):,} rows to {path}", flush=True)
+        tables[stat_type] = frame
+
+    return tables
+
+
 def collect_transfermarkt(out_dir: Path | None = None) -> dict[str, pd.DataFrame]:
     """Download prepared Transfermarkt CSVs into data/raw/transfermarkt/.
 
@@ -108,17 +195,10 @@ def collect_transfermarkt(out_dir: Path | None = None) -> dict[str, pd.DataFrame
 
 
 if __name__ == "__main__":
-    understat_error = None
-    try:
-        understat = collect_understat()
-        print(understat.shape)
-    except RuntimeError as exc:
-        understat_error = exc
-        print(exc)
+    fbref = collect_fbref()
+    for stat_type, frame in fbref.items():
+        print(stat_type, frame.shape)
 
     transfermarkt = collect_transfermarkt()
     for table_name, table in transfermarkt.items():
         print(table_name, table.shape)
-
-    if understat_error is not None:
-        raise understat_error
