@@ -15,6 +15,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import GroupKFold
 
 from src.clean_transfermarkt import RAW_DIR, value_at_date
@@ -24,6 +25,7 @@ from src.value_model import (
     POSITION_ORDER,
     _fit_predict,
     build_modeling_frame,
+    calibrate_against_reference,
     design_matrix,
 )
 
@@ -32,6 +34,8 @@ VALUATIONS_PATH = RAW_DIR / "player_valuations.csv"
 TM_PLAYERS_PATH = RAW_DIR / "players.csv"
 SIGNINGS_PATH = VALUED_PATH.parent / "backtest_signings.csv"
 PICKS_PATH = VALUED_PATH.parent / "backtest_model_picks.csv"
+CLUB_MAP_PATH = VALUED_PATH.parent / "club_name_map.csv"
+FIRST_TEAM_FEE = 10_000_000
 
 # FBref's Premier League denominator: 38 matches x 90 minutes.
 SPURS_SEASON_MINUTES = 38 * 90
@@ -173,6 +177,7 @@ def score_window(prepared: Prepared) -> pd.DataFrame:
     score_x = score_x.reindex(columns=train_x.columns, fill_value=0.0)
     groups = train["tm_player_id"].astype(int).to_numpy()
     predicted = np.empty(len(score), dtype=float)
+    train_oof = np.empty(len(train), dtype=float)
     fold_of_player: dict[int, int] = {}
     train_ids_by_fold: dict[int, set[int]] = {}
     folder = GroupKFold(n_splits=N_FOLDS)
@@ -184,15 +189,12 @@ def score_window(prepared: Prepared) -> pd.DataFrame:
             fold_of_player[player_id] = fold
         # The fold that holds a player out must not have trained on him.
         assert held_out.isdisjoint(fitted_on)
+        booster = HistGradientBoostingRegressor(random_state=42)
+        booster.fit(train_x.iloc[train_index], train_y.iloc[train_index])
+        train_oof[test_index] = booster.predict(train_x.iloc[test_index])
         mask = score["tm_player_id"].astype(int).isin(held_out).to_numpy()
-        if not mask.any():
-            continue
-        predicted[mask] = _fit_predict(
-            "hist_gradient_boosting",
-            train_x.iloc[train_index],
-            train_y.iloc[train_index],
-            score_x.iloc[np.flatnonzero(mask)],
-        )
+        if mask.any():
+            predicted[mask] = booster.predict(score_x.iloc[np.flatnonzero(mask)])
     known = score["tm_player_id"].astype(int).map(fold_of_player)
     missing = known.isna().to_numpy()
     if missing.any():
@@ -211,6 +213,17 @@ def score_window(prepared: Prepared) -> pd.DataFrame:
     output["value_gap"] = output["model_value"] / actual
     output["log_gap"] = predicted - actual_log
     output["gap_percentile"] = output.groupby("position_group")["log_gap"].rank(method="average", pct=True) * 100
+    train_gap = train_oof - np.log(train["market_value_eur"].to_numpy(dtype=float))
+    calibration = calibrate_against_reference(
+        train["market_value_eur"],
+        train_gap,
+        train["tm_player_id"],
+        output["market_value_eur"],
+        output["log_gap"],
+        output["tm_player_id"],
+    )
+    output = pd.concat([output.reset_index(drop=True), calibration], axis=1)
+    output["rank_gap"] = output["calibrated_gap"] if _training_gap_shrinks(train["market_value_eur"], train_gap) else output["log_gap"]
     output["value_date"] = pd.to_datetime(output["value_date"])
     assert output["value_date"].max() <= prepared.window.cutoff
     return output.reset_index(drop=True)
@@ -243,7 +256,7 @@ def run_backtest(
     transfers: pd.DataFrame | None = None,
     players: pd.DataFrame | None = None,
     save: bool = True,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Score every window and write the signings and the model's alternative picks."""
     if valued is None:
         valued = pd.read_csv(VALUED_PATH)
@@ -254,10 +267,14 @@ def run_backtest(
     if players is None:
         players = pd.read_csv(TM_PLAYERS_PATH, usecols=["player_id", "sub_position"])
     valuations = _valuations_for(valued, valuations)
+    transfers = transfers.copy()
+    transfers["transfer_date"] = pd.to_datetime(transfers["transfer_date"], errors="coerce")
+    club_teams = _fbref_team_by_club_id()
     values_at: dict = {}
     latest_valuation = pd.to_datetime(valuations["date"]).max()
     signings_frames = []
     pick_frames = []
+    pool_frames = []
     for window in WINDOWS:
         print(f"{window.name}: training on seasons that ended before {window.cutoff.date()}")
         prepared = prepare_window(window, valued, valuations, values_at)
@@ -266,12 +283,31 @@ def run_backtest(
             f"{len(prepared.train_frame)} training rows, {len(prepared.score_frame)} scored"
         )
         scored = score_window(prepared)
+        scored["tm_player_id"] = scored["tm_player_id"].astype(int)
+        changes = _changes_for(
+            scored["tm_player_id"], window, valuations, values_at, _too_early(window, latest_valuation)
+        )
+        scored = scored.merge(changes, on="tm_player_id", how="left")
+        strength = _club_strength_at_cutoff(valued, valuations, prepared.feature_season, window, values_at)
+        scored["moved_to_stronger_club"] = _moved_to_stronger_club(
+            scored["tm_player_id"].astype(int), window, transfers, club_teams, strength
+        )
         signings = _window_signings(window, transfers, players, scored, valuations, values_at, latest_valuation)
+        signings["signing_tier"] = [
+            _signing_tier(row.fee_eur, row.is_loan, int(row.tm_player_id), prepared.feature_season)
+            for row in signings.itertuples(index=False)
+        ]
+        signings["moved_to_stronger_club"] = _moved_to_stronger_club(
+            signings["tm_player_id"].astype(int), window, transfers, club_teams, strength
+        )
         picks = _window_picks(window, signings, scored, valuations, values_at, latest_valuation)
+        pool = scored.assign(window=window.name)
         signings_frames.append(signings)
         pick_frames.append(picks)
+        pool_frames.append(pool)
     signings_out = pd.concat(signings_frames, ignore_index=True)
     picks_out = pd.concat(pick_frames, ignore_index=True) if any(len(frame) for frame in pick_frames) else pd.DataFrame()
+    pool_out = pd.concat(pool_frames, ignore_index=True)
     _assert_outcome_dates(signings_out)
     _assert_outcome_dates(picks_out)
     if save:
@@ -280,7 +316,80 @@ def run_backtest(
         picks_out.to_csv(PICKS_PATH, index=False)
         print(f"Wrote {len(signings_out)} signings to {SIGNINGS_PATH}")
         print(f"Wrote {len(picks_out)} model picks to {PICKS_PATH}")
-    return signings_out, picks_out
+    return signings_out, picks_out, pool_out
+
+
+def _training_gap_shrinks(actual_value, log_gap) -> bool:
+    """Cheap training fees are over-predicted and expensive ones under-predicted."""
+    labels = pd.qcut(pd.Series(actual_value).astype(float), 10, labels=False, duplicates="drop") + 1
+    means = (
+        pd.DataFrame({"decile": labels.to_numpy(), "gap": np.asarray(log_gap, dtype=float)})
+        .groupby("decile")["gap"]
+        .mean()
+        .sort_index()
+    )
+    half = len(means) // 2
+    if half == 0:
+        return False
+    return bool((means.iloc[:half] > 0).all() and (means.iloc[half:] < 0).all())
+
+
+def _fbref_team_by_club_id() -> dict[int, str]:
+    clubs = pd.read_csv(RAW_DIR / "clubs.csv", usecols=["club_id", "name"])
+    mapping = pd.read_csv(CLUB_MAP_PATH)
+    mapping = mapping.loc[mapping["status"].eq("matched"), ["tm_club_name", "fbref_team"]]
+    merged = clubs.merge(mapping, left_on="name", right_on="tm_club_name", how="inner")
+    return dict(zip(merged["club_id"].astype(int), merged["fbref_team"]))
+
+
+def _club_strength_at_cutoff(valued, valuations, feature_season, window: Window, values_at) -> dict[str, float]:
+    """Mean log fee at each club on the cutoff. Used only to label moves, never as a feature."""
+    priced = _price_seasons(valued, valuations, {feature_season: window.cutoff}, values_at)
+    priced = priced.groupby(["tm_player_id", "team"], as_index=False)["market_value_eur"].first()
+    return priced.assign(log_value=np.log(priced["market_value_eur"])).groupby("team")["log_value"].mean().to_dict()
+
+
+def _moved_to_stronger_club(player_ids, window: Window, transfers, club_teams, strength) -> np.ndarray:
+    """True when a transfer in the next year joins a top-5 club with a higher squad fee."""
+    ids = pd.Series(list(player_ids)).astype(int)
+    start = pd.Timestamp(window.cutoff)
+    end = pd.Timestamp(window.too_early_after)
+    moves = transfers.loc[
+        transfers["player_id"].isin(set(ids))
+        & transfers["transfer_date"].notna()
+        & (transfers["transfer_date"] >= start)
+        & (transfers["transfer_date"] <= end)
+    ]
+    stepped_up = set()
+    for row in moves.itertuples(index=False):
+        origin = club_teams.get(int(row.from_club_id))
+        destination = club_teams.get(int(row.to_club_id))
+        if origin is None or destination is None or origin == destination:
+            continue
+        origin_strength = strength.get(origin)
+        destination_strength = strength.get(destination)
+        if origin_strength is None or destination_strength is None:
+            continue
+        if destination_strength > origin_strength:
+            stepped_up.add(int(row.player_id))
+    return ids.map(lambda player_id: player_id in stepped_up).to_numpy()
+
+
+def _signing_tier(fee, is_loan, player_id: int, feature_season: int) -> str:
+    """First-team is a €10m fee, or a loan of someone who already played 900 top-5 minutes."""
+    if pd.notna(fee) and float(fee) >= FIRST_TEAM_FEE:
+        return "first-team"
+    if bool(is_loan) and _prior_minutes(player_id, feature_season) >= 900:
+        return "first-team"
+    return "development"
+
+
+def _prior_minutes(player_id: int, season: int) -> float:
+    if not hasattr(_feature_clubs, "table"):
+        _feature_clubs(player_id, season)
+    table = _feature_clubs.table
+    rows = table.loc[(table["tm_player_id"] == player_id) & (table["season"] == season), "minutes"]
+    return float(rows.sum()) if len(rows) else 0.0
 
 
 def _drop_spurs_stints(valued: pd.DataFrame) -> pd.DataFrame:
@@ -448,10 +557,11 @@ def _window_picks(
     too_early = _too_early(window, latest_valuation)
     signed_ids = set(signings["tm_player_id"].astype(int))
     rows = []
-    changes = _changes_for(scored["tm_player_id"].astype(int), window, valuations, values_at, too_early)
     scored = scored.copy()
     scored["tm_player_id"] = scored["tm_player_id"].astype(int)
-    scored = scored.merge(changes, on="tm_player_id", how="left")
+    if "log_value_change" not in scored.columns:
+        changes = _changes_for(scored["tm_player_id"].astype(int), window, valuations, values_at, too_early)
+        scored = scored.merge(changes, on="tm_player_id", how="left")
     for role in roles:
         role_signings = signings.loc[signings["position_group"] == role]
         spurs_change = role_signings["log_value_change"].dropna()
@@ -461,7 +571,8 @@ def _window_picks(
             & (scored["age"] <= 27)
             & (scored["market_value_eur"] >= MIN_VALUE_EUR)
         ]
-        pool = eligible.sort_values(["log_gap", "player"], ascending=[False, True])
+        rank_column = "rank_gap" if "rank_gap" in eligible.columns else "log_gap"
+        pool = eligible.sort_values([rank_column, "player"], ascending=[False, True])
         position_change = scored.loc[scored["position_group"] == role, "log_value_change"].dropna()
         position_median = float(position_change.median()) if len(position_change) else np.nan
         age_matched_change = eligible["log_value_change"].dropna()
@@ -482,6 +593,8 @@ def _window_picks(
                     "model_value": pick.model_value,
                     "value_gap": pick.value_gap,
                     "log_gap": pick.log_gap,
+                    "calibrated_gap": getattr(pick, "calibrated_gap", np.nan),
+                    "moved_to_stronger_club": bool(getattr(pick, "moved_to_stronger_club", False)),
                     "value_12m": pick.value_12m,
                     "value_12m_date": pick.value_12m_date,
                     "log_value_change": pick.log_value_change,

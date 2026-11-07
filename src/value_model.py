@@ -290,8 +290,9 @@ def calibrate_against_reference(
         }
     )
     totals = reference.groupby("value_decile")["log_gap"].agg(decile_sum="sum", decile_n="count")
-    own = reference.groupby(["tm_player_id", "value_decile"], as_index=False)["log_gap"].mean()
-    own = own.rename(columns={"log_gap": "own_log_gap", "value_decile": "own_decile"})
+    own = reference.groupby(["tm_player_id", "value_decile"], as_index=False).agg(
+        own_log_gap=("log_gap", "sum"), own_n=("log_gap", "count")
+    )
     scored = pd.DataFrame(
         {
             "tm_player_id": pd.to_numeric(score_id, errors="coerce"),
@@ -300,10 +301,10 @@ def calibrate_against_reference(
         }
     )
     scored = scored.merge(totals, left_on="value_decile", right_index=True, how="left")
-    scored = scored.merge(own, on="tm_player_id", how="left")
-    same_decile = scored["own_decile"].eq(scored["value_decile"]) & scored["own_log_gap"].notna()
-    decile_sum = scored["decile_sum"] - np.where(same_decile, scored["own_log_gap"], 0.0)
-    decile_n = scored["decile_n"] - same_decile.astype(int)
+    scored = scored.merge(own, on=["tm_player_id", "value_decile"], how="left")
+    has_own = scored["own_n"].fillna(0) > 0
+    decile_sum = scored["decile_sum"] - np.where(has_own, scored["own_log_gap"].fillna(0), 0.0)
+    decile_n = scored["decile_n"] - np.where(has_own, scored["own_n"].fillna(0), 0.0)
     decile_mean = np.where(decile_n > 0, decile_sum / decile_n, 0.0)
     return pd.DataFrame(
         {
