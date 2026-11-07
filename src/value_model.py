@@ -8,7 +8,8 @@ Left out on purpose:
 - contract_expiration_date and the other contract fields: same July 2026 snapshot,
   so a contract signed later would leak into earlier seasons.
 - value_date: it records when the price was observed, not a trait of the player.
-- team: club reputation is already baked into the price we are trying to explain.
+- team, as a name: a club dummy would just memorize which clubs are expensive.
+  Teammates' fees are summarized instead, with the player's own fee removed.
 """
 
 from __future__ import annotations
@@ -49,6 +50,8 @@ LEAGUE_ORDER = [
 ]
 POSITION_ORDER = ["CB", "FB", "CM", "AM_W", "ST"]
 REFERENCE_AGE = 25
+STRENGTH_COLUMNS = ("team_strength", "league_value_share", "minutes_x_team_strength")
+MIN_VALUE_EUR = 2_000_000
 
 
 def build_modeling_frame(valued: pd.DataFrame | None = None) -> pd.DataFrame:
@@ -76,13 +79,17 @@ def build_modeling_frame(valued: pd.DataFrame | None = None) -> pd.DataFrame:
     frame["age_sq"] = frame["age"] ** 2
     frame["style_cluster"] = _style_labels(frame)
     frame["log_value"] = np.log(frame["market_value_eur"])
+    frame = _attach_team_strength(frame, valued)
     return frame.reset_index(drop=True)
 
 
 def design_matrix(frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     """Numeric columns plus one-hot league, role, and style. Premier League and CB are the baselines."""
     rates = [column for column in feature_columns(frame) if column in frame.columns]
-    numeric = frame[["age", "age_sq", "minutes", "starts_share", *rates]].apply(pd.to_numeric, errors="coerce")
+    strength = [column for column in STRENGTH_COLUMNS if column in frame.columns]
+    numeric = frame[["age", "age_sq", "minutes", "starts_share", *strength, *rates]].apply(
+        pd.to_numeric, errors="coerce"
+    )
     numeric = numeric.fillna(0.0)
     leagues = pd.Categorical(frame["league"], categories=LEAGUE_ORDER)
     roles = pd.Categorical(frame["position_group"], categories=POSITION_ORDER)
@@ -149,12 +156,13 @@ def choose_model(metrics: pd.DataFrame) -> tuple[str, str]:
     return winner, reason
 
 
-def out_of_fold_predictions(frame: pd.DataFrame, model: str) -> pd.DataFrame:
+def out_of_fold_predictions(frame: pd.DataFrame, model: str, save: bool = True) -> pd.DataFrame:
     """Score every row with a model that did not see that player."""
     matrix, target = design_matrix(frame)
     predicted_log = _cross_validate(model, matrix, target, frame["tm_player_id"].to_numpy())
-    predicted = np.exp(predicted_log)
     actual = frame["market_value_eur"].to_numpy(dtype=float)
+    actual_log = np.log(actual)
+    predicted = np.exp(predicted_log)
     output = pd.DataFrame(
         {
             "player": frame["player"].to_numpy(),
@@ -167,10 +175,12 @@ def out_of_fold_predictions(frame: pd.DataFrame, model: str) -> pd.DataFrame:
             "actual_value": actual,
             "predicted_value": predicted,
             "value_gap": predicted / actual,
+            "log_gap": predicted_log - actual_log,
         }
     )
-    PREDICTIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    output.to_csv(PREDICTIONS_PATH, index=False)
+    if save:
+        PREDICTIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        output.to_csv(PREDICTIONS_PATH, index=False)
     return output
 
 
@@ -207,22 +217,135 @@ def top_undervalued(
     season: str = "2526",
     position_group: str | None = None,
     max_age: float | None = 27,
-    min_value_eur: float | None = None,
+    min_value_eur: float | None = MIN_VALUE_EUR,
     n: int = 10,
     predictions: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    """Players whose stats imply a higher fee than the market, largest gap first."""
+    """Players whose stats imply a higher fee than the market, largest log gap first.
+
+    The rank uses predicted_log minus actual_log. value_gap is the same comparison
+    as a ratio, kept so a list can be read as "twice the fee". Fees under €2m are
+    left out unless min_value_eur is set lower: a near-zero fee makes any ratio huge.
+    """
     table = predictions.copy() if predictions is not None else pd.read_csv(PREDICTIONS_PATH)
     table["season"] = table["season"].map(_season_code)
     table = table.loc[table["season"] == _season_code(season)]
+    if "log_gap" not in table.columns:
+        table["log_gap"] = np.log(table["predicted_value"]) - np.log(table["actual_value"])
     if position_group is not None:
         table = table.loc[table["position_group"] == position_group]
     if max_age is not None:
         table = table.loc[table["age"] <= max_age]
     if min_value_eur is not None:
         table = table.loc[table["actual_value"] >= min_value_eur]
-    table = table.sort_values(["value_gap", "player"], ascending=[False, True]).head(n)
+    table = table.sort_values(["log_gap", "player"], ascending=[False, True]).head(n)
     return table.reset_index(drop=True)
+
+
+def weak_club_count(
+    predictions: pd.DataFrame,
+    n: int = 50,
+    max_age: float = 27,
+    min_value_eur: float = MIN_VALUE_EUR,
+    season: str = "2526",
+    valued: pd.DataFrame | None = None,
+) -> int:
+    """How many of the top undervalued players play for a bottom-third squad in their league."""
+    shortlist = top_undervalued(
+        season=season,
+        max_age=max_age,
+        min_value_eur=min_value_eur,
+        n=n,
+        predictions=predictions,
+    )
+    weak = _bottom_third_clubs(valued)
+    season_code = _season_code(season)
+    weak = weak.loc[weak["season"] == season_code, ["team", "league"]]
+    marked = shortlist.merge(weak.assign(weak=True), on=["team", "league"], how="left")
+    return int(marked["weak"].fillna(False).sum())
+
+
+def _attach_team_strength(frame: pd.DataFrame, valued: pd.DataFrame) -> pd.DataFrame:
+    """Leave-one-out teammate fees, plus the club's share of its league's squad value.
+
+    The pool is every matched player at the club that season, including those under
+    900 minutes. The player's own fee is subtracted so it cannot leak into his row.
+    """
+    squads = _squad_rows(valued)
+    club = (
+        squads.groupby(["team", "league", "season"], as_index=False)
+        .agg(
+            squad_value=("market_value_eur", "sum"),
+            squad_log_sum=("log_value", "sum"),
+            squad_n=("tm_player_id", "count"),
+        )
+    )
+    league_total = club.groupby(["league", "season"])["squad_value"].sum().rename("league_value")
+    club = club.merge(league_total.reset_index(), on=["league", "season"], how="left")
+    own = squads[["tm_player_id", "team", "season", "market_value_eur", "log_value"]].rename(
+        columns={"market_value_eur": "own_value", "log_value": "own_log"}
+    )
+    enriched = frame.copy()
+    enriched["tm_player_id"] = pd.to_numeric(enriched["tm_player_id"], errors="coerce").astype("int64")
+    enriched["season"] = enriched["season"].astype(int)
+    enriched = enriched.merge(club, on=["team", "league", "season"], how="left")
+    enriched = enriched.merge(own, on=["tm_player_id", "team", "season"], how="left")
+    present = enriched["own_log"].notna()
+    loo_n = enriched["squad_n"].fillna(0) - present.astype(int)
+    loo_log = enriched["squad_log_sum"].fillna(0) - np.where(present, enriched["own_log"].fillna(0), 0)
+    enriched["team_strength"] = np.where(loo_n > 0, loo_log / loo_n, np.nan)
+    own_value = np.where(present, enriched["own_value"].fillna(0), 0)
+    loo_league = enriched["league_value"].fillna(0) - own_value
+    loo_squad = enriched["squad_value"].fillna(0) - own_value
+    enriched["league_value_share"] = np.where(loo_league > 0, loo_squad / loo_league, np.nan)
+    league_fallback = (
+        club.assign(mean_log=club["squad_log_sum"] / club["squad_n"])
+        .groupby(["league", "season"])["mean_log"]
+        .mean()
+        .rename("league_fallback")
+    )
+    enriched = enriched.merge(league_fallback.reset_index(), on=["league", "season"], how="left")
+    enriched["team_strength"] = enriched["team_strength"].fillna(enriched["league_fallback"])
+    enriched["league_value_share"] = enriched["league_value_share"].fillna(0.0)
+    enriched["minutes_x_team_strength"] = enriched["minutes"] * enriched["team_strength"]
+    drop = [
+        "squad_value",
+        "squad_log_sum",
+        "squad_n",
+        "league_value",
+        "own_value",
+        "own_log",
+        "league_fallback",
+    ]
+    return enriched.drop(columns=drop)
+
+
+def _squad_rows(valued: pd.DataFrame) -> pd.DataFrame:
+    """One fee per matched player at each club and season, including short seasons."""
+    rows = valued.loc[
+        valued["season"].isin(MODEL_SEASONS)
+        & valued["tm_player_id"].notna()
+        & valued["market_value_eur"].notna()
+        & (valued["market_value_eur"] > 0),
+        ["tm_player_id", "team", "league", "season", "market_value_eur"],
+    ].copy()
+    rows["season"] = rows["season"].astype(int)
+    rows["tm_player_id"] = pd.to_numeric(rows["tm_player_id"], errors="coerce").astype("int64")
+    rows["market_value_eur"] = pd.to_numeric(rows["market_value_eur"], errors="coerce")
+    rows = rows.groupby(["tm_player_id", "team", "league", "season"], as_index=False)["market_value_eur"].first()
+    rows["log_value"] = np.log(rows["market_value_eur"])
+    return rows
+
+
+def _bottom_third_clubs(valued: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Clubs in the bottom third of their league by total squad value that season."""
+    if valued is None:
+        valued = pd.read_csv(VALUED_PATH)
+    squads = _squad_rows(valued)
+    club = squads.groupby(["team", "league", "season"], as_index=False)["market_value_eur"].sum()
+    club = club.rename(columns={"market_value_eur": "squad_value"})
+    club["pct"] = club.groupby(["league", "season"])["squad_value"].rank(method="average", pct=True, ascending=True)
+    return club.loc[club["pct"] <= (1 / 3), ["team", "league", "season"]]
 
 
 def _style_labels(frame: pd.DataFrame) -> pd.Series:
@@ -287,6 +410,21 @@ def _effect_sentence(feature: str, per_unit_log: float, marginal_age_at_25: floa
         return "Age-squared bends that curve, so the age effect gets steeper past the mid-twenties."
     if feature == "minutes":
         return f"An extra 1,000 minutes is associated with about {_percent(per_unit_log * 1000):+.0f}% of value."
+    if feature == "team_strength":
+        return (
+            "A doubling of the typical teammate's fee is associated with about "
+            f"{_percent(per_unit_log * np.log(2)):+.0f}% of value."
+        )
+    if feature == "league_value_share":
+        return (
+            "A 10-point larger share of the league's squad value is associated with about "
+            f"{_percent(per_unit_log * 0.10):+.0f}% of value."
+        )
+    if feature == "minutes_x_team_strength":
+        return (
+            "The same 1,000 minutes are worth about "
+            f"{_percent(per_unit_log * 1000):+.0f}% more when teammates' fees are 2.7 times higher."
+        )
     if feature == "starts_share":
         return (
             "Starting every match rather than none is associated with about "
@@ -344,10 +482,17 @@ def _season_code(value) -> int:
 if __name__ == "__main__":
     modeling = build_modeling_frame()
     print(f"{len(modeling)} player-seasons")
+    before = modeling.drop(columns=list(STRENGTH_COLUMNS))
+    print("BEFORE")
+    before_metrics = evaluate_models(before)
+    print(before_metrics.round(3).to_string(index=False))
+    before_scores = out_of_fold_predictions(before, "ridge", save=False)
+    print("before weak clubs", weak_club_count(before_scores))
+    print("AFTER")
     comparison = evaluate_models(modeling)
     print(comparison.round(3).to_string(index=False))
     winner, reason = choose_model(comparison)
     print(reason)
     scored = out_of_fold_predictions(modeling, winner)
+    print("after weak clubs", weak_club_count(scored))
     print(f"Wrote {len(scored)} rows to {PREDICTIONS_PATH}")
-    print(ridge_effects(modeling)[["feature", "in_words"]].to_string(index=False))
