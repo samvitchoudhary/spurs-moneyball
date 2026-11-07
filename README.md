@@ -1,0 +1,32 @@
+# Moneyball for Spurs
+
+An ML-driven scouting toolkit for Tottenham Hotspur’s January transfer window. The pipeline builds per-90 statistical profiles for players, groups them into playing styles, surfaces cheaper lookalikes via cosine similarity, and highlights undervalued targets by comparing model-predicted value to market value. Data sources include Understat, FotMob/Sofascore (through the `soccerdata` package), and open Transfermarkt dataset CSVs.
+
+**Driving question:** Can a machine learning model find undervalued players who fit what Tottenham needs this January?
+
+## Setup
+
+```bash
+git clone https://github.com/samvitchoudhary/spurs-moneyball.git
+cd spurs-moneyball
+python3.11 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+## Project structure
+
+| Path | Purpose |
+|------|---------|
+| `data/raw/` | Raw downloads from Understat, soccerdata, Transfermarkt, etc. (not committed) |
+| `data/processed/` | Cleaned, joined tables ready for modeling (not committed) |
+| `notebooks/` | Exploratory analysis and ad hoc experiments |
+| `reports/` | Figures, tables, and write-ups for scouting decisions |
+| `src/collect.py` | Pull player and match data from external APIs and CSVs |
+| `src/clean.py` | Standardize schemas, fix types, and handle missing values |
+| `src/join.py` | Link stats, market values, and identity across sources |
+| `src/features.py` | Build per-90 and derived feature vectors |
+| `src/similarity.py` | Cosine similarity search for stylistic replacements |
+| `src/cluster.py` | Cluster players into playing-style groups |
+| `src/value_model.py` | Train and score models for predicted vs. market value |
+| `src/backtest.py` | Evaluate recommendations on historical transfer outcomes |

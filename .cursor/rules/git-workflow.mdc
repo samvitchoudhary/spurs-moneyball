@@ -1,0 +1,11 @@
+---
+description: Commit and push to GitHub after every change
+alwaysApply: true
+---
+After completing any change to the codebase (new file, edit, deletion, or dependency change), always:
+1. Run `git status` to review what changed.
+2. Stage only the relevant files. Never commit anything in data/raw/, data/processed/, .venv/, or .env.
+3. Commit with a clear, specific message in the imperative mood (e.g. "Add Understat collector for Premier League player stats"), not vague messages like "update" or "changes".
+4. Run `git push origin main`.
+5. If the push fails, report the error and do not force-push.
+Make one commit per logical change, not one giant commit at the end of a session.
