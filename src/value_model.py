@@ -178,6 +178,7 @@ def out_of_fold_predictions(frame: pd.DataFrame, model: str, save: bool = True) 
             "log_gap": predicted_log - actual_log,
         }
     )
+    output = add_calibrated_gap(output)
     if save:
         PREDICTIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
         output.to_csv(PREDICTIONS_PATH, index=False)
@@ -213,6 +214,106 @@ def ridge_effects(frame: pd.DataFrame | None = None, n: int = 10) -> pd.DataFram
     return effects.reset_index(drop=True)
 
 
+def value_decile_table(predictions: pd.DataFrame, season: str = "2526") -> pd.DataFrame:
+    """Mean out-of-fold log gap in each decile of the actual fee."""
+    frame = predictions.copy()
+    frame["season"] = frame["season"].map(_season_code)
+    frame = frame.loc[frame["season"] == _season_code(season)].copy()
+    if "log_gap" not in frame.columns:
+        frame["log_gap"] = np.log(frame["predicted_value"]) - np.log(frame["actual_value"])
+    frame["value_decile"] = _decile_labels(frame["actual_value"])
+    table = frame.groupby("value_decile", as_index=False).agg(
+        players=("player", "size"),
+        min_value_eur=("actual_value", "min"),
+        max_value_eur=("actual_value", "max"),
+        mean_log_gap=("log_gap", "mean"),
+    )
+    return table.sort_values("value_decile").reset_index(drop=True)
+
+
+def cheap_players_look_undervalued(table: pd.DataFrame) -> bool:
+    """True when the cheap half of the fee range is over-predicted and the expensive half under-predicted."""
+    means = table.sort_values("value_decile")["mean_log_gap"].reset_index(drop=True)
+    half = len(means) // 2
+    if half == 0:
+        return False
+    return bool((means.iloc[:half] > 0).all() and (means.iloc[half:] < 0).all())
+
+
+def add_calibrated_gap(predictions: pd.DataFrame) -> pd.DataFrame:
+    """Subtract the leave-one-out mean log gap of the player's own fee decile.
+
+    Deciles are cut inside each season. The player's own gap is left out of the
+    mean, so the adjustment is not fitted on the residual it then removes.
+    """
+    frame = predictions.copy()
+    frame["season"] = frame["season"].map(_season_code)
+    if "log_gap" not in frame.columns:
+        frame["log_gap"] = np.log(frame["predicted_value"]) - np.log(frame["actual_value"])
+    frame["value_decile"] = frame.groupby("season", sort=False)["actual_value"].transform(_decile_labels)
+    grouped = frame.groupby(["season", "value_decile"], sort=False)["log_gap"]
+    counts = grouped.transform("count")
+    sums = grouped.transform("sum")
+    leave_one_out = np.where(counts > 1, (sums - frame["log_gap"]) / (counts - 1), 0.0)
+    frame["decile_mean_log_gap"] = leave_one_out
+    frame["calibrated_gap"] = frame["log_gap"] - frame["decile_mean_log_gap"]
+    return frame
+
+
+def calibrate_against_reference(
+    reference_value: pd.Series,
+    reference_log_gap: pd.Series,
+    reference_id: pd.Series,
+    score_value: pd.Series,
+    score_log_gap: pd.Series,
+    score_id: pd.Series,
+) -> pd.DataFrame:
+    """Calibrate score rows with decile means taken only from the reference rows.
+
+    The reference is a window's training predictions. A scored player who also
+    appears there is left out of his own decile mean.
+    """
+    reference_value = pd.Series(reference_value).reset_index(drop=True).astype(float)
+    reference_log_gap = pd.Series(reference_log_gap).reset_index(drop=True).astype(float)
+    reference_id = pd.Series(reference_id).reset_index(drop=True)
+    score_value = pd.Series(score_value).reset_index(drop=True).astype(float)
+    score_log_gap = pd.Series(score_log_gap).reset_index(drop=True).astype(float)
+    score_id = pd.Series(score_id).reset_index(drop=True)
+    bounds = _decile_bounds(reference_value)
+    reference_decile = _decile_from_bounds(reference_value, bounds)
+    score_decile = _decile_from_bounds(score_value, bounds)
+    reference = pd.DataFrame(
+        {
+            "tm_player_id": pd.to_numeric(reference_id, errors="coerce"),
+            "value_decile": reference_decile,
+            "log_gap": reference_log_gap,
+        }
+    )
+    totals = reference.groupby("value_decile")["log_gap"].agg(decile_sum="sum", decile_n="count")
+    own = reference.groupby(["tm_player_id", "value_decile"], as_index=False)["log_gap"].mean()
+    own = own.rename(columns={"log_gap": "own_log_gap", "value_decile": "own_decile"})
+    scored = pd.DataFrame(
+        {
+            "tm_player_id": pd.to_numeric(score_id, errors="coerce"),
+            "value_decile": score_decile.to_numpy(),
+            "log_gap": score_log_gap.to_numpy(),
+        }
+    )
+    scored = scored.merge(totals, left_on="value_decile", right_index=True, how="left")
+    scored = scored.merge(own, on="tm_player_id", how="left")
+    same_decile = scored["own_decile"].eq(scored["value_decile"]) & scored["own_log_gap"].notna()
+    decile_sum = scored["decile_sum"] - np.where(same_decile, scored["own_log_gap"], 0.0)
+    decile_n = scored["decile_n"] - same_decile.astype(int)
+    decile_mean = np.where(decile_n > 0, decile_sum / decile_n, 0.0)
+    return pd.DataFrame(
+        {
+            "value_decile": scored["value_decile"].to_numpy(),
+            "decile_mean_log_gap": decile_mean,
+            "calibrated_gap": scored["log_gap"].to_numpy() - decile_mean,
+        }
+    )
+
+
 def top_undervalued(
     season: str = "2526",
     position_group: str | None = None,
@@ -221,25 +322,47 @@ def top_undervalued(
     n: int = 10,
     predictions: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    """Players whose stats imply a higher fee than the market, largest log gap first.
+    """Players whose stats imply a higher fee than the market.
 
-    The rank uses predicted_log minus actual_log. value_gap is the same comparison
-    as a ratio, kept so a list can be read as "twice the fee". Fees under €2m are
-    left out unless min_value_eur is set lower: a near-zero fee makes any ratio huge.
+    The rank uses the calibrated log gap when cheap fees are systematically
+    over-predicted: raw log gap minus the mean log gap of that fee decile.
+    value_gap and log_gap stay on the row. Fees under €2m are left out unless
+    min_value_eur is set lower.
     """
     table = predictions.copy() if predictions is not None else pd.read_csv(PREDICTIONS_PATH)
     table["season"] = table["season"].map(_season_code)
-    table = table.loc[table["season"] == _season_code(season)]
     if "log_gap" not in table.columns:
         table["log_gap"] = np.log(table["predicted_value"]) - np.log(table["actual_value"])
+    season_code = _season_code(season)
+    rank = "log_gap"
+    if "calibrated_gap" in table.columns and cheap_players_look_undervalued(value_decile_table(table, season_code)):
+        rank = "calibrated_gap"
+    table = table.loc[table["season"] == season_code]
     if position_group is not None:
         table = table.loc[table["position_group"] == position_group]
     if max_age is not None:
         table = table.loc[table["age"] <= max_age]
     if min_value_eur is not None:
         table = table.loc[table["actual_value"] >= min_value_eur]
-    table = table.sort_values(["log_gap", "player"], ascending=[False, True]).head(n)
+    table = table.sort_values([rank, "player"], ascending=[False, True]).head(n)
     return table.reset_index(drop=True)
+
+
+def _decile_labels(values: pd.Series) -> pd.Series:
+    labels = pd.qcut(values, 10, labels=False, duplicates="drop")
+    return labels.astype(int) + 1
+
+
+def _decile_bounds(values: pd.Series) -> np.ndarray:
+    _, bounds = pd.qcut(values, 10, retbins=True, duplicates="drop")
+    bounds = bounds.astype(float).copy()
+    bounds[0] = -np.inf
+    bounds[-1] = np.inf
+    return bounds
+
+
+def _decile_from_bounds(values: pd.Series, bounds: np.ndarray) -> pd.Series:
+    return pd.cut(values.astype(float), bounds, labels=False, include_lowest=True).astype(int) + 1
 
 
 def weak_club_count(
