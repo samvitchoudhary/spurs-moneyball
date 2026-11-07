@@ -11,6 +11,14 @@ from src.clean_transfermarkt import normalize_name
 from src.features import VECTORS_PATH, feature_columns
 
 POOL_SEASON = 2526
+SIDE_FROM_SUB_POSITION = {
+    "Left-Back": "left",
+    "Right-Back": "right",
+    "Left Winger": "left",
+    "Right Winger": "right",
+    "Left Midfield": "left",
+    "Right Midfield": "right",
+}
 RESULT_COLUMNS = [
     "player",
     "team",
@@ -60,6 +68,7 @@ def find_similar(
     max_value_eur: float | None = None,
     max_age: float | None = None,
     leagues: list[str] | None = None,
+    same_side: bool = False,
     vectors: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Closest 2025-26 players in the same position group.
@@ -67,6 +76,10 @@ def find_similar(
     The search pool is always 2025-26. `season` chooses which of the named
     player's vectors is the target. The player himself is excluded. With
     cheaper_only, a match must be valued below the target.
+
+    For fullbacks and wide attackers, ``same_side`` keeps only candidates whose
+    Transfermarkt sub_position is the same flank (left or right). Players
+    without flank metadata are dropped when this filter is on.
     """
     table = vectors.copy() if vectors is not None else load_vectors()
     table["season"] = table["season"].map(_season_code)
@@ -83,8 +96,15 @@ def find_similar(
         pool = pool.loc[pool["market_value_eur"] < target["market_value_eur"]]
     if max_value_eur is not None:
         pool = pool.loc[pool["market_value_eur"] <= max_value_eur]
+    pool["age"] = pd.to_numeric(pool["age"], errors="coerce")
     if max_age is not None:
-        pool = pool.loc[pool["age"] <= max_age]
+        pool = pool.loc[pool["age"].notna() & (pool["age"] <= max_age)]
+    if same_side and target["position_group"] in ("FB", "AM_W"):
+        target_side = _flank_from_sub_position(target.get("sub_position"))
+        if target_side is None:
+            return pd.DataFrame(columns=RESULT_COLUMNS)
+        pool["_flank"] = pool["sub_position"].map(_flank_from_sub_position)
+        pool = pool.loc[pool["_flank"] == target_side].drop(columns=["_flank"])
     if leagues is not None:
         pool = pool.loc[pool["league"].isin(leagues)]
     if pool.empty:
@@ -136,6 +156,12 @@ def explain_match(
                 }
             )
     return pd.DataFrame(rows)
+
+
+def _flank_from_sub_position(sub_position) -> str | None:
+    if sub_position is None or (isinstance(sub_position, float) and pd.isna(sub_position)):
+        return None
+    return SIDE_FROM_SUB_POSITION.get(str(sub_position).strip())
 
 
 def _season_code(value) -> int:
