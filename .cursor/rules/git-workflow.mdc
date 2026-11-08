@@ -9,3 +9,5 @@ After completing any change to the codebase (new file, edit, deletion, or depend
 4. Run `git push origin main`.
 5. If the push fails, report the error and do not force-push.
 Make one commit per logical change, not one giant commit at the end of a session.
+
+Work directly on main. Do not create branches or pull requests unless the user explicitly asks. Never merge or deploy unless asked.
