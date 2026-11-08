@@ -8,3 +8,6 @@ seaborn
 jupyter
 python-dotenv
 tqdm
+streamlit
+plotly
+pyarrow
