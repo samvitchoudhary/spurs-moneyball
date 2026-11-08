@@ -438,6 +438,7 @@ def main() -> None:
         window_picks = picks.loc[picks["window"].eq(name)]
         window_signings = signings.loc[signings["window"].eq(name), "log_value_change"]
         age_matched = window_picks.drop_duplicates("position_group")["age_matched_median_log_change"]
+        role_baseline = window_picks.drop_duplicates("position_group")["position_median_log_change"]
 
         def pct(series: pd.Series):
             clean = series.dropna()
@@ -451,6 +452,7 @@ def main() -> None:
                 "picks": pct(window_picks["log_value_change"]),
                 "signings": pct(window_signings),
                 "ageMatched": pct(age_matched),
+                "roleBaseline": pct(role_baseline),
             }
         )
 
@@ -486,7 +488,13 @@ def main() -> None:
                 "window": str(row.window),
                 "positionGroup": None if pd.isna(row.position_group) else str(row.position_group),
                 "feeEur": num(row.fee_eur, 0),
+                "isLoan": None if pd.isna(row.is_loan) else bool(row.is_loan),
+                "valueAtWindowEur": num(row.value_at_cutoff, 0),
                 "modelValueEur": num(row.model_value, 0),
+                "gap": num(row.value_gap, 3),
+                "gapPercentile": num(row.gap_percentile, 1),
+                "minutesShare": num(row.minutes_share, 3),
+                "scorable": None if pd.isna(row.scorable) else bool(row.scorable),
                 "outcome": None if pd.isna(row.outcome) else str(row.outcome),
                 "tier": None if pd.isna(row.signing_tier) else str(row.signing_tier),
                 "valueChangePct": None if pd.isna(row.log_value_change) else round(float((np.exp(row.log_value_change) - 1) * 100), 1),

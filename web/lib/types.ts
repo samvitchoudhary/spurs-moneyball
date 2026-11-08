@@ -75,6 +75,7 @@ export type BacktestWindow = {
   picks: number | null;
   signings: number | null;
   ageMatched: number | null;
+  roleBaseline: number | null;
 };
 
 export type BacktestPick = {
@@ -98,7 +99,13 @@ export type BacktestSigning = {
   window: string;
   positionGroup: string | null;
   feeEur: number | null;
+  isLoan: boolean | null;
+  valueAtWindowEur: number | null;
   modelValueEur: number | null;
+  gap: number | null;
+  gapPercentile: number | null;
+  minutesShare: number | null;
+  scorable: boolean | null;
   outcome: string | null;
   tier: string | null;
   valueChangePct: number | null;
