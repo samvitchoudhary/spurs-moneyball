@@ -28,6 +28,32 @@ If you rebuild the processed tables yourself, refresh those files first:
 python scripts/export_app_data.py
 ```
 
+## Run the website
+
+The public site is a Next.js app in `web/`. It does no modelling in the browser. It reads JSON exported from the committed dashboard tables.
+
+```bash
+python scripts/export_web_data.py
+cd web
+npm install
+npm run dev
+```
+
+Open http://localhost:3000. The Streamlit app in `app/` is unchanged and remains the internal tool.
+
+`npm run build` writes a static export to `web/out`.
+
+## Deploy to Vercel
+
+The site is configured with `output: 'export'`, so Vercel serves files and does not need a backend or environment variables.
+
+1. Import this GitHub repository in Vercel.
+2. Set the project root directory to `web`.
+3. Leave the framework as Next.js. Build command: `npm run build`. Output directory: `out`.
+4. Deploy.
+
+Do not point that project at the repository root. The Streamlit dashboard is not part of the Vercel app.
+
 ## Project structure
 
 | Path | Purpose |
@@ -44,3 +70,6 @@ python scripts/export_app_data.py
 | `src/cluster.py` | Cluster players into playing-style groups |
 | `src/value_model.py` | Train and score models for predicted vs. market value |
 | `src/backtest.py` | Evaluate recommendations on historical transfer outcomes |
+| `scripts/export_web_data.py` | Export `app_data/` tables to compact JSON for the website |
+| `web/` | Static Next.js site (home and player pages; other routes are placeholders) |
+| `app/` | Streamlit dashboard, kept as the internal tool |
