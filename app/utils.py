@@ -539,20 +539,36 @@ def _figure_title(figure) -> str:
     return str(text or "").strip()
 
 
+# Room above the plotting area for zoom and pan. The title itself is drawn
+# outside the canvas, so this lane is only for the toolbar.
+TOOLBAR_LANE = 36
+
+
 def lift_chart_title(fig: go.Figure) -> str:
-    """Take the title off the Plotly canvas so the toolbar cannot cover it."""
+    """Move the title off the canvas and leave a lane for the toolbar."""
     title = _figure_title(fig)
     if not title:
         return ""
-    fig.update_layout(title_text="", margin_t=8)
+    fig.update_layout(title_text="", margin_t=TOOLBAR_LANE)
     return title
 
 
-def _install_chart_display() -> None:
-    """Keep the Plotly toolbar off the figure and name the chart for assistive tech.
+def chart_interaction_config(existing: dict | None = None) -> dict:
+    """Keep zoom and pan on the chart.
 
-    Touch screens ignore a hover-only toolbar and draw it on top of the title.
-    The title is rendered as text above the figure instead. Hover values stay.
+    The toolbar stays visible. A hover-only bar is not something a phone can
+    discover, and hiding the bar removed pan and zoom entirely. Titles are
+    rendered above the canvas, so the bar sits in the top lane instead of on
+    the title. A caller that already chose a mode keeps it.
+    """
+    config = dict(existing or {})
+    config.setdefault("displayModeBar", True)
+    return config
+
+
+def _install_chart_display() -> None:
+    """Show the chart title above the canvas and keep the Plotly toolbar.
+
     Called from prepare_page so every page picks it up. The wrap survives reruns.
     """
     current = st.plotly_chart
@@ -566,10 +582,7 @@ def _install_chart_display() -> None:
             title = lift_chart_title(figure_or_data)
         if title:
             st.markdown(f"<p class='ppdp-chart-title'>{escape(title)}</p>", unsafe_allow_html=True)
-        config = dict(kwargs.get("config") or {})
-        config["displayModeBar"] = False
-        config.setdefault("scrollZoom", False)
-        kwargs["config"] = config
+        kwargs["config"] = chart_interaction_config(kwargs.get("config"))
         if "alt" in accepted and not kwargs.get("alt") and title:
             kwargs["alt"] = title
         return current(figure_or_data, *args, **kwargs)

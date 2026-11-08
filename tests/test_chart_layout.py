@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import plotly.graph_objects as go
 
-from app.utils import CHART_COLORS, DIVERGING_SCALE, chart_layout, lift_chart_title
+from app.utils import CHART_COLORS, DIVERGING_SCALE, TOOLBAR_LANE, chart_interaction_config, chart_layout, lift_chart_title
 
 
 def test_placeholder_colors_share_a_series_and_explicit_colors_stay():
@@ -81,8 +81,19 @@ def test_title_can_be_lifted_off_the_canvas_without_changing_the_series():
     bottom = fig.layout.margin.b
     assert lift_chart_title(fig) == "Did the picks gain value?"
     assert fig.layout.title.text in ("", None)
+    assert fig.layout.margin.t == TOOLBAR_LANE
     assert fig.layout.margin.b == bottom
     assert list(fig.data[0].y) == [36.9]
+
+
+def test_zoom_and_pan_stay_in_the_toolbar_config():
+    config = chart_interaction_config(None)
+    assert config["displayModeBar"] is True
+    kept = chart_interaction_config({"scrollZoom": True})
+    assert kept["displayModeBar"] is True
+    assert kept["scrollZoom"] is True
+    explicit = chart_interaction_config({"displayModeBar": "hover"})
+    assert explicit["displayModeBar"] == "hover"
 
 
 def test_diverging_heatmap_keeps_values_and_uses_navy_to_terracotta():
