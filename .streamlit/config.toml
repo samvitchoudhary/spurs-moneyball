@@ -1,6 +1,15 @@
+[client]
+# Hides the developer Deploy button. Viewer options such as the main menu stay.
+# This key has been valid for several Streamlit releases, including ones older
+# than the chartCategoricalColors theme option.
+toolbarMode = "viewer"
+
 [theme]
 primaryColor = "#132257"
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F4F5F7"
 textColor = "#1C2333"
 font = "sans serif"
+# Chart series colors are applied in app/utils.py chart_layout, not here.
+# theme.chartCategoricalColors and theme.headingFontSizes are rejected as
+# unrecognized options by Streamlit versions that can still run this app.

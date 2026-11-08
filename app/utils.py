@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import inspect
+import re
 import sys
 from html import escape
 from pathlib import Path
@@ -178,16 +180,72 @@ SUBDIVISION_FLAGS = {
 
 
 def prepare_page(title: str) -> None:
+    _install_chart_display()
     st.markdown(
         """
         <style>
-        .block-container {padding-top: 1.4rem; padding-bottom: 4rem; max-width: 1180px;}
-        h1, h2, h3 {color: #132257;}
+        .block-container {padding-top: 1.25rem; padding-bottom: 4rem; max-width: 1180px;}
+        [data-testid="stHeading"] h1 {
+            color: #132257 !important;
+            font-size: 2.05rem !important;
+            line-height: 1.15 !important;
+            font-weight: 650 !important;
+            letter-spacing: -0.02em;
+        }
+        [data-testid="stHeading"] h2,
+        [data-testid="stHeading"] h3 {
+            color: #132257 !important;
+            letter-spacing: -0.015em;
+        }
+        [data-testid="stHeading"] h2 {font-size: 1.45rem !important;}
+        [data-testid="stHeading"] h3 {font-size: 1.2rem !important;}
+        .ppdp-chart-title {
+            color: #132257;
+            font-size: 1.05rem;
+            font-weight: 650;
+            line-height: 1.3;
+            margin: 0.85rem 0 0.1rem 0;
+        }
+        @media (max-width: 800px) {
+            [data-testid="stHeading"] h1 {
+                font-size: 1.65rem !important;
+                line-height: 1.2 !important;
+            }
+            [data-testid="stHeading"] h2 {font-size: 1.28rem !important;}
+        }
+        [data-testid="stCaptionContainer"],
+        [data-testid="stCaptionContainer"] p {
+            color: #3A4256 !important;
+        }
         div[data-testid="stMetric"] {
             background: #F4F5F7;
             border: 1px solid #E6E8EE;
             border-radius: 12px;
             padding: 12px 16px;
+        }
+        [data-testid="stMetricValue"] {
+            color: #132257;
+            font-weight: 650;
+        }
+        [data-testid="stMetricLabel"],
+        [data-testid="stMetricLabel"] p {
+            color: #3A4256 !important;
+        }
+        a[data-testid="stSidebarNavLink"][aria-current="page"] {
+            background: #E4E9F5 !important;
+            border-radius: 8px;
+            box-shadow: inset 3px 0 0 #132257;
+        }
+        a[data-testid="stSidebarNavLink"][aria-current="page"] p {
+            color: #132257 !important;
+            font-weight: 650 !important;
+        }
+        a[data-testid="stSidebarNavLink"]:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        [role="tab"]:focus-visible {
+            outline: 2px solid #132257 !important;
+            outline-offset: 2px;
         }
         </style>
         """,
@@ -312,19 +370,225 @@ def flag_badges(text) -> str:
     return "".join(pieces)
 
 
+# Streamlit's Plotly theme paints series with placeholder colors (#000001…).
+# The browser swaps those for its default blue/red palette unless the figure
+# already uses real colors. These are the dashboard series colors.
+CHART_COLORS = ["#132257", "#C45C26", "#1F7A4D", "#6B4C9A", "#B03A2E", "#5C6B73"]
+_PLACEHOLDER_COLORS = {f"#{index:06d}": CHART_COLORS[(index - 1) % len(CHART_COLORS)] for index in range(1, 11)}
+_OURS = {color.lower() for color in CHART_COLORS}
+# High values (more need) are terracotta. Low values are navy. Same direction as RdBu_r.
+DIVERGING_SCALE = [
+    [0.0, "#132257"],
+    [0.2, "#5C73A8"],
+    [0.4, "#C5CEE3"],
+    [0.5, "#F7F6F4"],
+    [0.6, "#F3D2C2"],
+    [0.8, "#D4784A"],
+    [1.0, "#C45C26"],
+]
+_CODE_LABEL = re.compile(r"[A-Za-z][A-Za-z0-9]*_[A-Za-z0-9_]+")
+
+
+def _solid_color(value) -> str | None:
+    if isinstance(value, str):
+        return value
+    return None
+
+
+def _recolor(container, mapping: dict[str, str]) -> None:
+    if container is None:
+        return
+    current = _solid_color(getattr(container, "color", None))
+    if current is None or current.lower() in _OURS:
+        return
+    mapped = mapping.get(current.lower())
+    if mapped:
+        container.color = mapped
+
+
+def _apply_series_palette(fig: go.Figure) -> None:
+    """Replace Streamlit placeholder series colors, leaving explicit ones."""
+    for trace in fig.data:
+        _recolor(getattr(trace, "marker", None), _PLACEHOLDER_COLORS)
+        _recolor(getattr(trace, "line", None), _PLACEHOLDER_COLORS)
+
+
+def _apply_diverging_scale(fig: go.Figure) -> None:
+    # Plotly expands a named scale such as RdBu_r into RGB stops before we see it,
+    # so the shared layout owns the diverging palette for every heatmap.
+    for trace in fig.data:
+        if getattr(trace, "type", None) == "heatmap":
+            trace.colorscale = DIVERGING_SCALE
+
+
+def _readable_axis_title(text: str) -> str:
+    cleaned = str(text).strip()
+    if cleaned in {"x", "y"}:
+        return ""
+    if cleaned in FEATURE_LABELS or _CODE_LABEL.fullmatch(cleaned):
+        return feature_label(cleaned)
+    return cleaned
+
+
+def _humanize_labels(fig: go.Figure) -> None:
+    for axis_name in ("xaxis", "yaxis"):
+        axis = getattr(fig.layout, axis_name, None)
+        title = getattr(axis, "title", None) if axis is not None else None
+        text = getattr(title, "text", None) if title is not None else None
+        if text:
+            axis.title.text = _readable_axis_title(str(text))
+    for trace in fig.data:
+        name = getattr(trace, "name", None)
+        if isinstance(name, str) and (_CODE_LABEL.fullmatch(name) or name in FEATURE_LABELS):
+            trace.name = feature_label(name)
+
+
+def _room_for_outside_bar_labels(fig: go.Figure) -> None:
+    values: list[float] = []
+    for trace in fig.data:
+        if getattr(trace, "type", None) != "bar" or getattr(trace, "orientation", None) != "h":
+            continue
+        if getattr(trace, "textposition", None) not in {"outside", "auto"}:
+            continue
+        trace.cliponaxis = False
+        raw = getattr(trace, "x", None)
+        if raw is None:
+            continue
+        for value in list(raw):
+            if isinstance(value, (int, float)) and value == value:
+                values.append(float(value))
+    if not values or fig.layout.xaxis.range is not None:
+        return
+    low, high = min(values), max(values)
+    span = max(high - low, abs(high), abs(low), 1.0)
+    # Outside labels on a negative bar extend toward the category names.
+    fig.update_xaxes(range=[low - span * 0.42, high + span * 0.28])
+
+
 def chart_layout(fig: go.Figure, title: str) -> go.Figure:
+    """Shared chart chrome: palette, readable labels, and room for the legend."""
+    _apply_series_palette(fig)
+    _apply_diverging_scale(fig)
+    _humanize_labels(fig)
+    _room_for_outside_bar_labels(fig)
+    named = [trace.name for trace in fig.data if getattr(trace, "name", None) and trace.showlegend is not False]
+    # Phone width fits about two legend items per row. Leave that room up front
+    # so a wrapped legend does not sit on the axis title.
+    legend_rows = 0 if not named else max(1, (len(named) + 1) // 2)
+    category_count = _string_category_count(fig)
+    # Vertical category labels need their own band, under the legend.
+    # A shallow angle stacks "Summer 2023" on the next window at phone width.
+    bottom = 56 + legend_rows * 22 + (88 if category_count >= 5 else 0)
     fig.update_layout(
-        title=dict(text=title, font=dict(color=NAVY, size=18)),
+        title=dict(
+            text=title,
+            font=dict(color=NAVY, size=17, family="Source Sans, Arial, sans-serif"),
+            x=0,
+            xanchor="left",
+            xref="paper",
+            yref="container",
+            y=1,
+            yanchor="top",
+            pad=dict(t=2, b=6, l=0, r=0),
+        ),
         paper_bgcolor="white",
         plot_bgcolor="white",
-        font=dict(color="#1C2333", family="Arial"),
-        colorway=["#132257", "#C45C26", "#1F7A4D", "#6B4C9A", "#B03A2E", "#5C6B73"],
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
-        margin=dict(l=48, r=24, t=72, b=48),
+        font=dict(color="#1C2333", family="Source Sans, Arial, sans-serif", size=13),
+        colorway=CHART_COLORS,
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=-0.42 if category_count >= 5 else -0.16,
+            x=0,
+            xanchor="left",
+            title_text="",
+            font=dict(size=12, color="#1C2333"),
+            bgcolor="rgba(0,0,0,0)",
+            tracegroupgap=8,
+        ),
+        margin=dict(l=56, r=28, t=52, b=bottom),
+        hoverlabel=dict(bgcolor="white", font_size=13, font_color="#1C2333"),
     )
-    fig.update_xaxes(showgrid=True, gridcolor="#E6E8EE", zeroline=False)
-    fig.update_yaxes(showgrid=True, gridcolor="#E6E8EE", zeroline=False)
+    axis = dict(showgrid=True, gridcolor="#E6E8EE", zeroline=False, automargin=True, title_standoff=10)
+    fig.update_xaxes(**axis)
+    fig.update_yaxes(**axis)
+    if category_count >= 5:
+        fig.update_xaxes(tickangle=-90)
     return fig
+
+
+def _string_category_count(fig: go.Figure) -> int:
+    """How many x labels are words, not a numeric series."""
+    if not fig.data:
+        return 0
+    raw = getattr(fig.data[0], "x", None)
+    if raw is None:
+        return 0
+    try:
+        values = list(raw)
+    except TypeError:
+        return 0
+    if values and all(isinstance(value, str) for value in values):
+        return len(values)
+    return 0
+
+
+def _figure_title(figure) -> str:
+    title = getattr(getattr(figure, "layout", None), "title", None)
+    text = getattr(title, "text", None) if title is not None else None
+    return str(text or "").strip()
+
+
+# Room above the plotting area for zoom and pan. The title itself is drawn
+# outside the canvas, so this lane is only for the toolbar.
+TOOLBAR_LANE = 36
+
+
+def lift_chart_title(fig: go.Figure) -> str:
+    """Move the title off the canvas and leave a lane for the toolbar."""
+    title = _figure_title(fig)
+    if not title:
+        return ""
+    fig.update_layout(title_text="", margin_t=TOOLBAR_LANE)
+    return title
+
+
+def chart_interaction_config(existing: dict | None = None) -> dict:
+    """Keep zoom and pan on the chart.
+
+    The toolbar stays visible. A hover-only bar is not something a phone can
+    discover, and hiding the bar removed pan and zoom entirely. Titles are
+    rendered above the canvas, so the bar sits in the top lane instead of on
+    the title. A caller that already chose a mode keeps it.
+    """
+    config = dict(existing or {})
+    config.setdefault("displayModeBar", True)
+    return config
+
+
+def _install_chart_display() -> None:
+    """Show the chart title above the canvas and keep the Plotly toolbar.
+
+    Called from prepare_page so every page picks it up. The wrap survives reruns.
+    """
+    current = st.plotly_chart
+    if getattr(current, "_ppdp_wrapped", False):
+        return
+    accepted = set(inspect.signature(current).parameters)
+
+    def show(figure_or_data, *args, **kwargs):
+        title = ""
+        if hasattr(figure_or_data, "update_layout"):
+            title = lift_chart_title(figure_or_data)
+        if title:
+            st.markdown(f"<p class='ppdp-chart-title'>{escape(title)}</p>", unsafe_allow_html=True)
+        kwargs["config"] = chart_interaction_config(kwargs.get("config"))
+        if "alt" in accepted and not kwargs.get("alt") and title:
+            kwargs["alt"] = title
+        return current(figure_or_data, *args, **kwargs)
+
+    show._ppdp_wrapped = True
+    st.plotly_chart = show
 
 
 def feature_label(name: str) -> str:
