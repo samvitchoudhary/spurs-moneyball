@@ -1,13 +1,17 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
+import { Suspense } from "react";
+
+import { BacktestExplorer } from "@/components/backtest-explorer";
+import { getBacktest, getPlayers } from "@/lib/data";
 
 export const metadata = { title: "Backtest" };
 
 export default function Page() {
+  const backtest = getBacktest();
+  const playerIds = getPlayers().map((player) => player.id);
+
   return (
-    <PlaceholderPage
-      eyebrow="Did it work"
-      title="Backtest"
-      dek="The same rules, run on transfer windows the model was not allowed to see."
-    />
+    <Suspense fallback={<p className="mx-auto max-w-6xl px-5 py-16 text-[#3A4256]">Loading the backtest…</p>}>
+      <BacktestExplorer signings={backtest.signings} playerIds={playerIds} />
+    </Suspense>
   );
 }
