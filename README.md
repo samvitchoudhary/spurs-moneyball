@@ -14,6 +14,20 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+## Run the dashboard
+
+The app reads committed tables in `app_data/`, so a fresh clone does not need a scrape.
+
+```bash
+streamlit run app/Home.py
+```
+
+If you rebuild the processed tables yourself, refresh those files first:
+
+```bash
+python scripts/export_app_data.py
+```
+
 ## Project structure
 
 | Path | Purpose |
