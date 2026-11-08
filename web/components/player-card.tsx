@@ -61,7 +61,7 @@ export function PlayerCard({
   );
   if (!id) return inner;
   return (
-    <Link href={`/player/${id}`} className="block rounded-2xl focus-visible:outline-[#132257]">
+    <Link href={`/player?id=${id}`} className="block rounded-2xl focus-visible:outline-[#132257]">
       {inner}
     </Link>
   );

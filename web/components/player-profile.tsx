@@ -1,26 +1,32 @@
-import type { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { PcaPlot } from "@/components/charts/pca-plot";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { PlayerCard } from "@/components/player-card";
 import { StatBar } from "@/components/stat-bar";
-import { getMeta, getNeighbors, getPca, getPlayer, getPlayers } from "@/lib/data";
 import { formatAge, formatEuro, formatSimilarity } from "@/lib/format";
 import { positionColor } from "@/lib/positions";
+import type { Meta, Neighbor, PcaPoint, Player } from "@/lib/types";
 
-export function generateStaticParams() {
-  return getPlayers().map((player) => ({ id: player.id }));
-}
+const cache: {
+  players?: Promise<Player[]>;
+  neighbors?: Promise<Record<string, Neighbor[]>>;
+  pca?: Promise<Record<string, PcaPoint[]>>;
+  meta?: Promise<Meta>;
+} = {};
 
-export const dynamicParams = false;
-
-export function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  return params.then(({ id }) => {
-    const player = getPlayer(id);
-    return { title: player?.name ?? "Player" };
-  });
+function loadJson<T>(key: keyof typeof cache, file: string): Promise<T> {
+  if (!cache[key]) {
+    cache[key] = fetch(`/data/${file}`).then((response) => {
+      if (!response.ok) throw new Error(file);
+      return response.json();
+    }) as Promise<Player[]> & Promise<Record<string, Neighbor[]>> & Promise<Record<string, PcaPoint[]>> & Promise<Meta>;
+  }
+  return cache[key] as Promise<T>;
 }
 
 function gapCopy(market: number | null, model: number | null, gap: number | null): string {
@@ -32,18 +38,71 @@ function gapCopy(market: number | null, model: number | null, gap: number | null
   return `${lead} After the fee-band adjustment, he sits close to the market.`;
 }
 
-export default async function PlayerPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const player = getPlayer(id);
-  if (!player) notFound();
-  const meta = getMeta();
+export function PlayerProfile() {
+  const id = useSearchParams().get("id");
+  const [status, setStatus] = useState<"loading" | "missing" | "ready">("loading");
+  const [player, setPlayer] = useState<Player | null>(null);
+  const [similar, setSimilar] = useState<{ neighbor: Neighbor; player: Player }[]>([]);
+  const [pca, setPca] = useState<PcaPoint[]>([]);
+  const [labels, setLabels] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!id) {
+      setStatus("missing");
+      return;
+    }
+    let cancelled = false;
+    setStatus("loading");
+    Promise.all([
+      loadJson<Player[]>("players", "players.json"),
+      loadJson<Record<string, Neighbor[]>>("neighbors", "neighbors.json"),
+      loadJson<Record<string, PcaPoint[]>>("pca", "pca.json"),
+      loadJson<Meta>("meta", "meta.json"),
+    ])
+      .then(([players, neighbors, maps, meta]) => {
+        if (cancelled) return;
+        const found = players.find((row) => row.id === id) ?? null;
+        if (!found) {
+          setPlayer(null);
+          setStatus("missing");
+          return;
+        }
+        const byId = new Map(players.map((row) => [row.id, row]));
+        setPlayer(found);
+        setLabels(meta.featureLabels);
+        setPca(maps[found.positionGroup] ?? []);
+        setSimilar(
+          (neighbors[id] ?? [])
+            .slice(0, 10)
+            .map((neighbor) => ({ neighbor, player: byId.get(neighbor.id) }))
+            .filter((row): row is { neighbor: Neighbor; player: Player } => Boolean(row.player)),
+        );
+        setStatus("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("missing");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (status === "loading") {
+    return <p className="mx-auto max-w-6xl px-5 py-16 text-[#3A4256]">Loading player…</p>;
+  }
+  if (status === "missing" || !player) {
+    return (
+      <article className="mx-auto max-w-2xl px-5 py-16">
+        <h1 className="font-serif text-4xl text-[#132257]">Player not found</h1>
+        <Link href="/" className="mt-6 inline-block text-[#132257] underline">
+          Back to the story
+        </Link>
+      </article>
+    );
+  }
+
   const color = positionColor(player.positionGroup);
   const stats = Object.entries(player.percentiles).filter((entry): entry is [string, number] => entry[1] != null);
-  const similar = getNeighbors(id)
-    .slice(0, 10)
-    .map((neighbor) => ({ neighbor, player: getPlayer(neighbor.id) }))
-    .filter((row) => row.player);
-  const pca = getPca(player.positionGroup);
 
   return (
     <article className="mx-auto max-w-6xl px-5 py-10">
@@ -77,7 +136,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
           <p className="mt-2 text-sm text-[#3A4256]">100 means he is at the top of {player.position.toLowerCase()}s this season. 50 is typical.</p>
           <div className="mt-5 space-y-3">
             {stats.map(([key, value]) => (
-              <StatBar key={key} label={meta.featureLabels[key] ?? key} value={value} color={color} />
+              <StatBar key={key} label={labels[key] ?? key} value={value} color={color} />
             ))}
           </div>
         </div>
@@ -91,24 +150,22 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
       <section className="mt-14">
         <h2 className="font-serif text-2xl text-[#132257]">Ten players with a similar stat line</h2>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          {similar.map(({ neighbor, player: match }) =>
-            match ? (
-              <PlayerCard
-                key={match.id}
-                id={match.id}
-                name={match.name}
-                club={match.team}
-                age={match.age}
-                flag={match.flag}
-                positionGroup={match.positionGroup}
-                position={match.position}
-                style={match.style}
-                marketValueEur={match.marketValueEur}
-                metric={formatSimilarity(neighbor.similarity)}
-                metricLabel="Similar"
-              />
-            ) : null,
-          )}
+          {similar.map(({ neighbor, player: match }) => (
+            <PlayerCard
+              key={match.id}
+              id={match.id}
+              name={match.name}
+              club={match.team}
+              age={match.age}
+              flag={match.flag}
+              positionGroup={match.positionGroup}
+              position={match.position}
+              style={match.style}
+              marketValueEur={match.marketValueEur}
+              metric={formatSimilarity(neighbor.similarity)}
+              metricLabel="Similar"
+            />
+          ))}
         </div>
       </section>
     </article>

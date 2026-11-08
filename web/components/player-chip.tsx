@@ -19,7 +19,7 @@ export function PlayerChip({
   );
   if (!id) return body;
   return (
-    <Link href={`/player/${id}`} className="rounded-full hover:underline">
+    <Link href={`/player?id=${id}`} className="rounded-full hover:underline">
       {body}
     </Link>
   );

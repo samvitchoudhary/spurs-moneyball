@@ -34,7 +34,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                 value={`${player.name} ${player.team} ${player.position}`}
                 onSelect={() => {
                   onOpenChange(false);
-                  router.push(`/player/${player.id}`);
+                  router.push(`/player?id=${player.id}`);
                 }}
               >
                 <PlayerAvatar name={player.name} positionGroup={player.positionGroup} size={28} />
