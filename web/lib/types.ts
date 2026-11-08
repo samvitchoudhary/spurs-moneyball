@@ -143,6 +143,20 @@ export type StoryPlayer = {
   marketValueEur: number | null;
 };
 
+export type ModelMetricRow = {
+  model: string;
+  split: "grouped_by_player" | "time_split_2025_26";
+  r2: number;
+  mae_log: number;
+  median_pct_error: number;
+};
+
+export type ModelMetrics = {
+  rows: ModelMetricRow[];
+  keptModel: string;
+  keptReason: string;
+};
+
 export type Meta = {
   playersAnalyzed: number;
   seasons: number;

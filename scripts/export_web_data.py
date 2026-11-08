@@ -43,6 +43,15 @@ ROLE = {
     "GK": "Goalkeeper",
 }
 
+MODEL_SLUG = {
+    "ridge": "ridge",
+    "hist_gradient_boosting": "gradient_boosting",
+}
+MODEL_SPLIT = {
+    "GroupKFold": "grouped_by_player",
+    "time split 2025-26": "time_split_2025_26",
+}
+
 
 def player_id(name: str, birth_year) -> str:
     text = unicodedata.normalize("NFKD", str(name)).encode("ascii", "ignore").decode("ascii")
@@ -180,6 +189,44 @@ def squad_payload(frame: pd.DataFrame) -> list[dict]:
             }
         )
     return rows
+
+
+def export_model_metrics(frame: pd.DataFrame) -> dict:
+    """The model comparison table the value page reads from app_data/model_metrics.parquet."""
+    if len(frame) != 4:
+        raise SystemExit(f"model_metrics expected 4 rows, got {len(frame)}")
+    kept_raw = str(frame["kept_model"].iloc[0])
+    kept = MODEL_SLUG.get(kept_raw, kept_raw)
+    time_holdout = frame.loc[frame["split"].eq("time split 2025-26")]
+    ridge = time_holdout.loc[time_holdout["model"].eq("ridge")].iloc[0]
+    boosting = time_holdout.loc[time_holdout["model"].eq("hist_gradient_boosting")].iloc[0]
+    if kept_raw == "hist_gradient_boosting":
+        winner_label, other_label = "Gradient boosting", "Ridge"
+        winner_median = float(boosting["median_abs_pct_error"])
+        other_median = float(ridge["median_abs_pct_error"])
+    else:
+        winner_label, other_label = "Ridge", "gradient boosting"
+        winner_median = float(ridge["median_abs_pct_error"])
+        other_median = float(boosting["median_abs_pct_error"])
+    kept_reason = (
+        f"{winner_label} was kept: it had the lower median error on the 2025-26 season "
+        f"it never trained on ({winner_median:.1f}% against {other_median:.1f}% for {other_label})."
+    )
+    rows = []
+    for row in frame.itertuples(index=False):
+        split = str(row.split)
+        if split not in MODEL_SPLIT:
+            raise SystemExit(f"Unknown model split {split!r}")
+        rows.append(
+            {
+                "model": MODEL_SLUG.get(str(row.model), str(row.model)),
+                "split": MODEL_SPLIT[split],
+                "r2": num(row.r2, 3),
+                "mae_log": num(row.mae_log, 3),
+                "median_pct_error": num(row.median_abs_pct_error, 1),
+            }
+        )
+    return {"rows": rows, "keptModel": kept, "keptReason": kept_reason}
 
 
 def write(name: str, payload) -> int:
@@ -509,6 +556,19 @@ def main() -> None:
         "roles": ROLE,
     }
 
+    model_metrics = export_model_metrics(metrics)
+    headline = next(
+        row for row in model_metrics["rows"] if row["model"] == model_metrics["keptModel"] and row["split"] == "time_split_2025_26"
+    )
+    if round(headline["r2"], 2) != meta["r2"]:
+        raise SystemExit(
+            f"model_metrics headline R² {headline['r2']} does not match meta.json r2 {meta['r2']} for {model_metrics['keptModel']}."
+        )
+    if round(headline["median_pct_error"]) != meta["typicalMissPct"]:
+        raise SystemExit(
+            f"model_metrics median error {headline['median_pct_error']} does not match meta typicalMissPct {meta['typicalMissPct']}."
+        )
+
     point_ids = {point["id"] for points in pca.values() for point in points}
     refresh_squad(vectors, clusters, exported_ids, point_ids)
     squad_path = DATA / "squad.parquet"
@@ -528,6 +588,7 @@ def main() -> None:
     total += write("needs.json", need_rows)
     total += write("shortlist.json", short_rows)
     total += write("meta.json", meta)
+    total += write("model_metrics.json", model_metrics)
     print(f"{'TOTAL':24} {total / 1024:8.1f} KB  ({total / 1024 / 1024:.2f} MB)")
 
 
