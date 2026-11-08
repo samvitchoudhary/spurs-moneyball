@@ -77,7 +77,17 @@ function StyleMark({
   );
 }
 
-export function StyleMap({ points, players, positionGroup }: { points: PcaPoint[]; players: Player[]; positionGroup: string }) {
+export function StyleMap({
+  points,
+  players,
+  positionGroup,
+  spursIds,
+}: {
+  points: PcaPoint[];
+  players: Player[];
+  positionGroup: string;
+  spursIds: Set<string>;
+}) {
   const router = useRouter();
   const [active, setActive] = useState<StyleDot | null>(null);
   const byId = useMemo(() => new Map(players.map((player) => [player.id, player])), [players]);
@@ -93,7 +103,7 @@ export function StyleMap({ points, players, positionGroup }: { points: PcaPoint[
       y: point.y,
       style,
       positionGroup,
-      spurs: player?.team === "Tottenham",
+      spurs: spursIds.has(point.id),
       fill: colorOf.get(style) ?? "#5E656B",
     };
   });
