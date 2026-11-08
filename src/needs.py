@@ -7,6 +7,12 @@ leagues is marked "no prior data" and does not enter the quality or output
 averages.
 
 Contracts are Transfermarkt's July 2026 snapshot, not a live expiry list.
+
+Quality, output, and depth enter the score as z-scores across the five roles.
+Age and contract do not. A 4% share was the highest gap in the squad and a
+z-score turned it into a large need. Those two use the raw minute share,
+from 0 to 1, multiplied by 2 so they sit on the same scale as a typical z-score.
+A small share stays small.
 """
 
 from __future__ import annotations
@@ -181,8 +187,12 @@ def _score_groups(squad: pd.DataFrame, benchmark: list[str]) -> pd.DataFrame:
     needs["depth_gap"] = needs["benchmark_depth"] - needs["spurs_depth"]
     needs["age_gap"] = needs["spurs_age_share"] - needs["benchmark_age_share"]
     needs["contract_gap"] = needs["spurs_contract_share"] - needs["benchmark_contract_share"]
-    for component in WEIGHTS:
+    for component in ("quality", "output", "depth"):
         needs[f"z_{component}"] = _zscore(needs[f"{component}_gap"])
+    # Age and contract are the raw minute shares, scaled onto a z-score range.
+    # Z-scoring them made the largest of five tiny shares look like a crisis.
+    needs["z_age"] = needs["spurs_age_share"] * 2
+    needs["z_contract"] = needs["spurs_contract_share"] * 2
     needs["need_score"] = sum(weight * needs[f"z_{name}"] for name, weight in WEIGHTS.items())
     needs["rank"] = needs["need_score"].rank(ascending=False, method="min").astype(int)
     needs = _sensitivity(needs)
