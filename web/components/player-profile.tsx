@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { PcaPlot } from "@/components/charts/pca-plot";
@@ -10,24 +9,8 @@ import { PlayerCard } from "@/components/player-card";
 import { StatBar } from "@/components/stat-bar";
 import { formatAge, formatEuro, formatSimilarity } from "@/lib/format";
 import { positionColor } from "@/lib/positions";
-import type { Meta, Neighbor, PcaPoint, Player } from "@/lib/types";
-
-const cache: {
-  players?: Promise<Player[]>;
-  neighbors?: Promise<Record<string, Neighbor[]>>;
-  pca?: Promise<Record<string, PcaPoint[]>>;
-  meta?: Promise<Meta>;
-} = {};
-
-function loadJson<T>(key: keyof typeof cache, file: string): Promise<T> {
-  if (!cache[key]) {
-    cache[key] = fetch(`/data/${file}`).then((response) => {
-      if (!response.ok) throw new Error(file);
-      return response.json();
-    }) as Promise<Player[]> & Promise<Record<string, Neighbor[]>> & Promise<Record<string, PcaPoint[]>> & Promise<Meta>;
-  }
-  return cache[key] as Promise<T>;
-}
+import { usePlayerData } from "@/lib/use-player-data";
+import type { Neighbor, Player } from "@/lib/types";
 
 function gapCopy(market: number | null, model: number | null, gap: number | null): string {
   if (market == null || model == null) return "This profile has no model value to set beside the market fee.";
@@ -40,57 +23,23 @@ function gapCopy(market: number | null, model: number | null, gap: number | null
 
 export function PlayerProfile() {
   const id = useSearchParams().get("id");
-  const [status, setStatus] = useState<"loading" | "missing" | "ready">("loading");
-  const [player, setPlayer] = useState<Player | null>(null);
-  const [similar, setSimilar] = useState<{ neighbor: Neighbor; player: Player }[]>([]);
-  const [pca, setPca] = useState<PcaPoint[]>([]);
-  const [labels, setLabels] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (!id) {
-      setStatus("missing");
-      return;
-    }
-    let cancelled = false;
-    setStatus("loading");
-    Promise.all([
-      loadJson<Player[]>("players", "players.json"),
-      loadJson<Record<string, Neighbor[]>>("neighbors", "neighbors.json"),
-      loadJson<Record<string, PcaPoint[]>>("pca", "pca.json"),
-      loadJson<Meta>("meta", "meta.json"),
-    ])
-      .then(([players, neighbors, maps, meta]) => {
-        if (cancelled) return;
-        const found = players.find((row) => row.id === id) ?? null;
-        if (!found) {
-          setPlayer(null);
-          setStatus("missing");
-          return;
-        }
-        const byId = new Map(players.map((row) => [row.id, row]));
-        setPlayer(found);
-        setLabels(meta.featureLabels);
-        setPca(maps[found.positionGroup] ?? []);
-        setSimilar(
-          (neighbors[id] ?? [])
-            .slice(0, 10)
-            .map((neighbor) => ({ neighbor, player: byId.get(neighbor.id) }))
-            .filter((row): row is { neighbor: Neighbor; player: Player } => Boolean(row.player)),
-        );
-        setStatus("ready");
-      })
-      .catch(() => {
-        if (!cancelled) setStatus("missing");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
+  const { status, bundle } = usePlayerData();
+  const player = id && bundle ? (bundle.players.find((row) => row.id === id) ?? null) : null;
+  const byId = bundle ? new Map(bundle.players.map((row) => [row.id, row])) : new Map<string, Player>();
+  const similar: { neighbor: Neighbor; player: Player }[] =
+    id && bundle
+      ? (bundle.neighbors[id] ?? [])
+          .slice(0, 10)
+          .map((neighbor) => ({ neighbor, player: byId.get(neighbor.id) }))
+          .filter((row): row is { neighbor: Neighbor; player: Player } => Boolean(row.player))
+      : [];
+  const pca = player && bundle ? (bundle.pca[player.positionGroup] ?? []) : [];
+  const labels = bundle?.meta.featureLabels ?? {};
 
   if (status === "loading") {
     return <p className="mx-auto max-w-6xl px-5 py-16 text-[#3A4256]">Loading player…</p>;
   }
-  if (status === "missing" || !player) {
+  if (status === "error" || !id || !player) {
     return (
       <article className="mx-auto max-w-2xl px-5 py-16">
         <h1 className="font-serif text-4xl text-[#132257]">Player not found</h1>
