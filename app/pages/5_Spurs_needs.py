@@ -3,7 +3,7 @@ import streamlit as st
 
 st.set_page_config(page_title="Spurs needs", page_icon="⚽", layout="wide")
 
-from utils import ROLE, chart_layout, footer, load_needs, prepare_page
+from utils import ROLE, chart_layout, footer, load_needs, needs_bottom_to_top, prepare_page
 
 prepare_page("Where Spurs need to recruit")
 st.markdown(
@@ -12,19 +12,21 @@ st.markdown(
     "The comparison is the six Premier League clubs with the highest squad value, Spurs excluded."
 )
 
-needs = load_needs().sort_values("need_score", ascending=True)
+needs = needs_bottom_to_top(load_needs())
 needs["role"] = needs["position_group"].map(ROLE)
+role_order = needs["role"].tolist()
 colors = ["#132257" if score > 0 else "#8d8d8d" for score in needs["need_score"]]
 fig = go.Figure(go.Bar(y=needs["role"], x=needs["need_score"], orientation="h", marker_color=colors, text=needs["need_score"].map(lambda value: f"{value:.2f}"), textposition="outside"))
 fig.update_xaxes(title="Need score")
 chart_layout(fig, "Roles furthest behind the six richest squads")
+fig.update_yaxes(categoryorder="array", categoryarray=role_order)
 st.plotly_chart(fig, width="stretch")
 st.caption(
     "A bar to the right is a stronger case for recruiting there. "
     "Quality, output, and depth are z-scores across the five roles. Age and contract are the raw minute share times two, so a small share stays small."
 )
 
-ordered = load_needs().sort_values("need_score", ascending=False)
+ordered = needs
 components = [
     ("z_quality", "Quality 35%"),
     ("z_output", "Output 25%"),
@@ -47,9 +49,11 @@ heat = go.Figure(
     )
 )
 chart_layout(heat, "What is driving each score")
+heat.update_yaxes(categoryorder="array", categoryarray=role_order)
 st.plotly_chart(heat, width="stretch")
 st.caption(
-    "Red pushes a role up the list. Blue means Spurs are in better shape than the other roles on that check. "
+    "Terracotta pushes a role up the list. Navy means Spurs are in better shape than the other roles on that check. "
+    "The rows run in the same order as the bars above, with the strongest need at the top. "
     "Age and contract are not z-scores. They are the share of minutes, times two."
 )
 
