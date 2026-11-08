@@ -11,7 +11,7 @@ export default function Page() {
 
   return (
     <Suspense fallback={<p className="mx-auto max-w-6xl px-5 py-16 text-[#3A4256]">Loading the backtest…</p>}>
-      <BacktestExplorer signings={backtest.signings} playerIds={playerIds} />
+      <BacktestExplorer signings={backtest.signings} picks={backtest.picks} windows={backtest.windows} playerIds={playerIds} />
     </Suspense>
   );
 }
