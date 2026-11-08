@@ -50,21 +50,22 @@ function nearestPoint(points: ScatterPoint[], svg: SVGSVGElement, clientX: numbe
   return best;
 }
 
-export function ValueScatter({ points }: { points: ScatterPoint[] }) {
+export function ValueScatter({ points, onOpen }: { points: ScatterPoint[]; onOpen?: (id: string) => void }) {
   const data = points.filter((point) => point.actual > 0 && point.predicted > 0);
   const [active, setActive] = useState<ScatterPoint | null>(null);
 
-  function pick(event: MouseEvent<HTMLDivElement>) {
+  function pick(event: MouseEvent<HTMLDivElement>, open: boolean) {
     const svg = event.currentTarget.querySelector("svg");
     if (!svg) return;
     const point = nearestPoint(data, svg, event.clientX, event.clientY);
     if (!point) return;
     setActive((current) => (current?.id === point.id ? current : point));
+    if (open) onOpen?.(point.id);
   }
 
   return (
     <div className="w-full min-w-0">
-      <div className="h-80 cursor-crosshair" onMouseMove={pick} onClick={pick}>
+      <div className="h-80 cursor-crosshair" onMouseMove={(event) => pick(event, false)} onClick={(event) => pick(event, true)}>
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <CartesianGrid stroke="#E4E0D6" />

@@ -8,6 +8,7 @@ import type {
   Cluster,
   Decile,
   Meta,
+  ModelMetrics,
   Need,
   Neighbor,
   PcaPoint,
@@ -77,4 +78,8 @@ export function getShortlist(): ShortlistRow[] {
 
 export function getMeta(): Meta {
   return read<Meta>("meta.json");
+}
+
+export function getModelMetrics(): ModelMetrics {
+  return read<ModelMetrics>("model_metrics.json");
 }
