@@ -12,8 +12,10 @@ from utils import (
     load_vectors,
     player_card,
     prepare_page,
+    same_side_applies,
     season_label,
     show_cards,
+    similarity_empty_message,
 )
 from src.similarity import explain_match, find_similar
 
@@ -51,14 +53,20 @@ season = st.selectbox(
     format_func=season_label,
 )
 
+target = history.loc[history["season"].eq(season)].iloc[0]
+side_relevant = same_side_applies(target.position_group)
 with st.sidebar:
     st.header("Filters")
     max_age = st.slider("Max age", 17, 40, 27)
     max_value_m = st.number_input("Max value, €m (0 = no cap)", min_value=0.0, value=0.0, step=1.0)
-    same_side = st.checkbox("Same side", value=False, help="Left stays left, right stays right. Full-backs and wide attackers only.")
-    leagues = st.multiselect("Leagues", sorted(vectors.loc[vectors["season"].eq(2526), "league"].dropna().unique()), default=sorted(vectors.loc[vectors["season"].eq(2526), "league"].dropna().unique()))
-
-target = history.loc[history["season"].eq(season)].iloc[0]
+    same_side = False
+    if side_relevant:
+        same_side = st.checkbox("Same side", value=False, help="Left stays left, right stays right.")
+    else:
+        st.caption("Same side is only for full-backs and wide attackers. It is not applied to this player.")
+    league_options = sorted(vectors.loc[vectors["season"].eq(2526), "league"].dropna().unique())
+    leagues = st.multiselect("Leagues", league_options, default=league_options)
+    st.caption("Clearing every league returns nobody. It does not silently mean all leagues.")
 style = styles.get((target.player, target.team), "")
 st.markdown(
     player_card(
@@ -76,21 +84,24 @@ st.markdown(
 
 other_year = vectors["player"].eq(player) & vectors["birth_year"].ne(birth_year)
 scoped = vectors.loc[~other_year].copy()
-try:
-    matches = find_similar(
-        player,
-        season=str(season),
-        n=10,
-        cheaper_only=False,
-        max_value_eur=None if max_value_m == 0 else max_value_m * 1_000_000,
-        max_age=max_age,
-        leagues=leagues or None,
-        same_side=same_side,
-        vectors=scoped,
-    )
-except ValueError as error:
+if not leagues:
     matches = pd.DataFrame()
-    st.warning(str(error))
+else:
+    try:
+        matches = find_similar(
+            player,
+            season=str(season),
+            n=10,
+            cheaper_only=False,
+            max_value_eur=None if max_value_m == 0 else max_value_m * 1_000_000,
+            max_age=max_age,
+            leagues=list(leagues),
+            same_side=same_side,
+            vectors=scoped,
+        )
+    except ValueError as error:
+        matches = pd.DataFrame()
+        st.warning(str(error))
 
 lookup = vectors.loc[vectors["season"].eq(2526)].drop_duplicates(["player", "birth_year"])
 cards = []
@@ -106,14 +117,19 @@ for match in matches.itertuples(index=False):
             "" if info is None else info.position_group,
             "" if info is None else styles.get((info.player, info.team), ""),
             match.market_value_eur,
-            note=f"{match.similarity * 100:.0f}% similar",
+            figure=f"{match.similarity * 100:.0f}%",
         )
     )
 st.subheader("Ten closest profiles")
-show_cards(cards)
+if not leagues or not cards:
+    st.info(similarity_empty_message(max_age, max_value_m, list(leagues), same_side))
+else:
+    show_cards(cards)
 
 if not matches.empty:
-    compared = st.selectbox("Compare features with", matches["player"].tolist())
+    choice_col, chart_col = st.columns([1, 2], vertical_alignment="top")
+    with choice_col:
+        compared = st.selectbox("Compare features with", matches["player"].tolist())
     try:
         detail = explain_match(player, compared, season="2526", vectors=scoped)
     except ValueError as error:
@@ -124,10 +140,11 @@ if not matches.empty:
         fig.add_bar(name=player, x=detail["feature"].map(feature_label), y=detail["z_a"], marker_color="#132257")
         fig.add_bar(name=compared, x=detail["feature"].map(feature_label), y=detail["z_b"], marker_color="#C45C26")
         chart_layout(fig, "Where the two profiles sit closest, and furthest")
-        st.plotly_chart(fig, width="stretch")
-        st.caption(
-            "Each bar is a z-score inside the position group. The three features on the left of the pairing are the closest. "
-            "The three on the right are the furthest apart. Zero is an average player in that role."
-        )
+        with chart_col:
+            st.plotly_chart(fig, width="stretch")
+            st.caption(
+                "Each bar is a z-score inside the position group. The three features on the left of the pairing are the closest. "
+                "The three on the right are the furthest apart. Zero is an average player in that role."
+            )
 
 footer()

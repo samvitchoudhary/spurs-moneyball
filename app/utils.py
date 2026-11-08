@@ -313,6 +313,8 @@ def player_card(
     style: str = "",
     market_value=None,
     note: str = "",
+    figure: str = "",
+    badges: str = "",
 ) -> str:
     color = POSITION_COLORS.get(str(position), NAVY)
     age_text = f"{int(round(float(age)))}" if age is not None and not pd.isna(age) else "—"
@@ -320,10 +322,18 @@ def player_card(
     style_text = str(style) if style is not None and not pd.isna(style) and str(style) else "Style unknown"
     flag = flag_emoji(nationality)
     note_html = f"<div style='margin-top:6px;color:#132257;font-weight:600'>{escape(note)}</div>" if note else ""
+    figure_html = (
+        f"<div style='margin-left:auto;text-align:right;flex:0 0 auto;'>"
+        f"<div style='font-weight:700;color:#132257;font-size:1.45rem;line-height:1;'>{escape(figure)}</div>"
+        f"</div>"
+        if figure
+        else ""
+    )
+    badge_html = f"<div style='margin-top:8px'>{badges}</div>" if badges else ""
     return f"""
     <div style="display:flex;gap:12px;align-items:flex-start;border:1px solid #E6E8EE;border-radius:14px;padding:12px 14px;background:#fff;margin-bottom:10px;min-height:92px;">
       <div style="flex:0 0 52px;width:52px;height:52px;border-radius:50%;background:{color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:0.03em;">{escape(initials(name))}</div>
-      <div style="min-width:0">
+      <div style="min-width:0;flex:1">
         <div style="font-weight:700;color:#132257;font-size:1.02rem;">{escape(str(name))} {flag}</div>
         <div style="color:#5c6578;font-size:0.9rem;">{escape(str(club or '—'))} · {age_text}</div>
         <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
@@ -332,7 +342,9 @@ def player_card(
           <span style="color:#132257;font-weight:650;font-size:0.9rem;">{escape(money(market_value))}</span>
         </div>
         {note_html}
+        {badge_html}
       </div>
+      {figure_html}
     </div>
     """
 
@@ -347,8 +359,31 @@ def show_cards(cards: list[str], per_row: int = 2) -> None:
             column.markdown(card, unsafe_allow_html=True)
 
 
+def readable_flag_text(text) -> str:
+    """Add the space after a comma when the stored flag text omitted one."""
+    if text is None or (isinstance(text, float) and pd.isna(text)):
+        return ""
+    return re.sub(r",(?=\S)", ", ", str(text))
+
+
+def same_side_applies(position_group: str) -> bool:
+    """The flank filter only changes full-back and wide-attacker results."""
+    return str(position_group) in {"FB", "AM_W"}
+
+
+def similarity_empty_message(max_age: float, max_value_m: float, leagues: list[str], same_side: bool) -> str:
+    parts = [f"aged {int(max_age)} or under"]
+    if max_value_m:
+        parts.append(f"valued at €{max_value_m:.0f}m or less")
+    if same_side:
+        parts.append("on the same side")
+    league_text = ", ".join(leagues) if leagues else "no selected league"
+    return f"No player in {league_text} is {', '.join(parts)}."
+
+
 def flag_badges(text) -> str:
-    if text is None or pd.isna(text) or not str(text).strip():
+    text = readable_flag_text(text)
+    if not str(text).strip():
         return "<span style='color:#5c6578'>No flags</span>"
     colors = {
         "Hard to buy": ("#FDECEC", "#8C2F2F"),

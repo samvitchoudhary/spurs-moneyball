@@ -7,8 +7,7 @@ from utils import chart_layout, flag_badges, footer, load_shortlist, load_vector
 
 prepare_page("January shortlist")
 st.info(
-    "These scores rank candidates for a human scout to review. They are not recommendations on their own. "
-    "The names still need the manual checks in data/manual_checks.csv: a current Transfermarkt value, whether a deal is realistic, and a keep or drop."
+    "A scout's review list, not a recommendation. Confirm the current fee and whether a deal is realistic before acting."
 )
 
 shortlist = load_shortlist()
@@ -41,9 +40,11 @@ def draw(need: str, title: str) -> None:
     for part, color in colors.items():
         chunk = parts.loc[parts["Part"].eq(part)].set_index("Player").loc[order]
         fig.add_bar(name=part, y=order, x=chunk["Points"], orientation="h", marker_color=color)
-    fig.update_layout(barmode="stack", yaxis=dict(autorange="reversed"))
+    fig.update_layout(barmode="stack")
     fig.update_xaxes(title="Weighted points")
     chart_layout(fig, title)
+    fig.update_layout(legend_traceorder="normal")
+    fig.update_yaxes(autorange="reversed")
     st.plotly_chart(fig, width="stretch")
     st.caption(
         "Each bar is the score. Value is 40% of its percentile, style 30%, form 20%, reliability 10%. "
@@ -63,11 +64,15 @@ def draw(need: str, title: str) -> None:
                 row.age_at_window,
                 nationality,
                 position,
-                row.target_style if row.style_percentile >= 70 else "Style fit is not the reason he ranks",
+                row.target_style if row.style_percentile >= 70 else "Not a style pick",
                 row.actual_value,
-                note=f"#{int(row.rank)} · score {row.total_score:.0f} · value {row.value_percentile:.0f} · style {row.style_percentile:.0f} · form {row.form_percentile:.0f} · reliability {row.reliability_percentile:.0f}",
+                note=(
+                    f"Rank {int(row.rank)} · value {row.value_percentile:.0f} · style {row.style_percentile:.0f} · "
+                    f"form {row.form_percentile:.0f} · reliability {row.reliability_percentile:.0f}"
+                ),
+                figure=f"{row.total_score:.0f}",
+                badges=flag_badges(row.flags),
             )
-            + flag_badges(row.flags)
         )
     show_cards(cards)
 
