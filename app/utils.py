@@ -595,6 +595,137 @@ def feature_label(name: str) -> str:
     return FEATURE_LABELS.get(str(name), str(name).replace("_", " "))
 
 
+_FEATURE_TOKEN = re.compile(r"\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b")
+MODEL_LABELS = {
+    "hist_gradient_boosting": "Histogram gradient boosting",
+    "ridge": "Ridge",
+}
+EURO_LOG_STOPS = (1e5, 1e6, 1e7, 1e8, 2e8)
+OUTCOME_ORDER = ("hit", "mixed", "too early", "miss")
+
+
+def humanize_feature_text(text) -> str:
+    """Turn stored feature codes into words. The numbers in the text stay put."""
+    if text is None or (isinstance(text, float) and pd.isna(text)):
+        return ""
+    return _FEATURE_TOKEN.sub(lambda match: feature_label(match.group(0)), str(text))
+
+
+def model_label(name: str) -> str:
+    key = str(name)
+    return MODEL_LABELS.get(key, key.replace("_", " "))
+
+
+def humanize_model_sentence(text: str) -> str:
+    sentence = str(text)
+    for key, label in MODEL_LABELS.items():
+        sentence = sentence.replace(key, label)
+    return sentence
+
+
+def euro_tick(value: float) -> str:
+    number = float(value)
+    if number >= 1_000_000:
+        millions = number / 1_000_000
+        text = f"{millions:.0f}" if abs(millions - round(millions)) < 1e-9 else f"{millions:.1f}"
+        return f"€{text}m"
+    if number >= 1_000:
+        return f"€{number / 1_000:.0f}k"
+    return f"€{number:.0f}"
+
+
+def apply_euro_log_ticks(fig: go.Figure) -> None:
+    """Label a log fee axis in euros. The plotted values are unchanged."""
+    labels = [euro_tick(stop) for stop in EURO_LOG_STOPS]
+    fig.update_xaxes(tickmode="array", tickvals=list(EURO_LOG_STOPS), ticktext=labels)
+    fig.update_yaxes(tickmode="array", tickvals=list(EURO_LOG_STOPS), ticktext=labels)
+
+
+def style_sample_ready(row_count: int) -> bool:
+    """A two-axis map needs at least two players. Fewer than that is empty data."""
+    return int(row_count) >= 2
+
+
+def percent_point_label(value) -> str:
+    """Label a measured zero. Leave other values to the bar, and missing values blank."""
+    if value is None or pd.isna(value):
+        return ""
+    if float(value) == 0.0:
+        return "0%"
+    return ""
+
+
+def fully_missing_categories(frame: pd.DataFrame, category: str, columns: list[str]) -> list[str]:
+    missing = []
+    for name, group in frame.groupby(category, sort=False):
+        if group[columns].isna().all().all():
+            missing.append(str(name))
+    return missing
+
+
+def backtest_headlines(picks: pd.DataFrame, signings: pd.DataFrame) -> dict[str, float]:
+    """The four headline figures already published for the backtest.
+
+    Medians use the log change, then convert to a percent. The beat rate is the
+    share of picks with a follow-up value above their own age-matched benchmark.
+    """
+    role = picks.drop_duplicates(["window", "position_group"])
+    compared = picks.loc[picks["log_value_change"].notna()]
+    return {
+        "picks_median_pct": float((np.exp(picks["log_value_change"].median()) - 1) * 100),
+        "age_matched_pct": float((np.exp(role["age_matched_median_log_change"].median()) - 1) * 100),
+        "beat_share": float((compared["log_value_change"] > compared["age_matched_median_log_change"]).mean()),
+        "signings_median_pct": float((np.exp(signings["log_value_change"].median()) - 1) * 100),
+    }
+
+
+def needs_bottom_to_top(frame: pd.DataFrame) -> pd.DataFrame:
+    """Lowest need score first, which Plotly draws at the bottom."""
+    return frame.sort_values("need_score", ascending=True)
+
+
+def category_order(preferred: tuple[str, ...] | list[str], present: list[str]) -> list[str]:
+    seen = []
+    for item in present:
+        text = str(item)
+        if text not in seen:
+            seen.append(text)
+    ordered = [item for item in preferred if item in seen]
+    ordered.extend(item for item in seen if item not in preferred)
+    return ordered
+
+
+def highlight_category(fig: go.Figure, categories: list[str], selected: str) -> go.Figure:
+    """Shade one category. The bar values are not changed."""
+    index = list(categories).index(selected)
+    fig.add_vrect(
+        x0=index - 0.5,
+        x1=index + 0.5,
+        fillcolor="rgba(19, 34, 87, 0.08)",
+        line_width=0,
+        layer="below",
+    )
+    return fig
+
+
+def pad_bar_value_axis(fig: go.Figure, lower: float = 8, upper: float = 18) -> None:
+    """Leave room above and below vertical bars so an end label is not clipped."""
+    values: list[float] = []
+    for trace in fig.data:
+        if getattr(trace, "type", None) != "bar" or getattr(trace, "orientation", None) == "h":
+            continue
+        raw = getattr(trace, "y", None)
+        if raw is None:
+            continue
+        for value in list(raw):
+            if isinstance(value, (int, float)) and value == value:
+                values.append(float(value))
+    if not values:
+        return
+    low, high = min(values), max(values)
+    fig.update_yaxes(range=[min(low, 0) - lower, max(high, 0) + upper])
+
+
 @st.cache_data
 def load_vectors() -> pd.DataFrame:
     frame = pd.read_parquet(DATA / "player_vectors.parquet")

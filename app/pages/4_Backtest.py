@@ -6,7 +6,23 @@ import streamlit as st
 
 st.set_page_config(page_title="Backtest", page_icon="⚽", layout="wide")
 
-from utils import ROLE, chart_layout, footer, load_picks, load_signings, money, percent_change, prepare_page
+from utils import (
+    OUTCOME_ORDER,
+    ROLE,
+    backtest_headlines,
+    category_order,
+    chart_layout,
+    footer,
+    fully_missing_categories,
+    highlight_category,
+    load_picks,
+    load_signings,
+    money,
+    pad_bar_value_axis,
+    percent_change,
+    percent_point_label,
+    prepare_page,
+)
 
 prepare_page("Backtest")
 st.markdown(
@@ -16,6 +32,18 @@ st.markdown(
 
 signings = load_signings()
 picks = load_picks()
+headlines = backtest_headlines(picks, signings)
+metric_cols = st.columns(4)
+metric_cols[0].metric("Picks' median", f"{headlines['picks_median_pct']:+.0f}%")
+metric_cols[1].metric("Age-matched benchmark", f"{headlines['age_matched_pct']:+.1f}%")
+metric_cols[2].metric("Picks above that bar", f"{headlines['beat_share'] * 100:.0f}%")
+metric_cols[3].metric("Spurs arrivals' median", f"{headlines['signings_median_pct']:+.0f}%")
+st.caption(
+    "These four figures are the published backtest result. "
+    "The age-matched benchmark is the median of one benchmark per role and window. "
+    "The write-up below rounds −6.7% to about −6%."
+)
+
 windows = ["Summer 2023", "January 2024", "Summer 2024", "January 2025", "Summer 2025", "January 2026"]
 window = st.selectbox("Window", windows)
 
@@ -34,14 +62,28 @@ for name in windows:
     )
 summary = pd.DataFrame(rows)
 long = summary.melt("Window", var_name="Group", value_name="Change")
-fig = px.bar(long, x="Window", y="Change", color="Group", barmode="group")
+long["Label"] = long["Change"].map(percent_point_label)
+fig = px.bar(long, x="Window", y="Change", color="Group", text="Label", barmode="group")
+fig.update_traces(textposition="outside", cliponaxis=False)
 fig.update_yaxes(title="Median change in value, %")
 chart_layout(fig, "Did the picks gain value?")
+highlight_category(fig, windows, window)
+pad_bar_value_axis(fig)
+for name in fully_missing_categories(summary, "Window", ["Model picks", "Spurs signings", "Age-matched role"]):
+    fig.add_annotation(
+        x=name,
+        y=0,
+        text="No follow-up",
+        showarrow=False,
+        yshift=18,
+        font=dict(size=12, color="#3A4256"),
+    )
 st.plotly_chart(fig, width="stretch")
 st.caption(
     "Each bar is a median percentage change in market value over the following year. "
-    "Age-matched role is players in the same position, aged 27 or under, valued at €2m or more. "
-    "January 2026 has no follow-up value yet."
+    "The shaded window is the one selected above, and the tables below use it. "
+    "A label of 0% is a measured median of zero. “No follow-up” means that window has no later value. "
+    "Age-matched role is players in the same position, aged 27 or under, valued at €2m or more."
 )
 
 chosen = signings.loc[signings["window"].eq(window)].copy()
@@ -95,6 +137,7 @@ split = (
 )
 split_fig = px.bar(split, x="outcome", y="Arrivals", color="signing_tier", barmode="group")
 chart_layout(split_fig, "Hits were first-team arrivals")
+split_fig.update_xaxes(categoryorder="array", categoryarray=category_order(OUTCOME_ORDER, split["outcome"].astype(str).tolist()))
 st.plotly_chart(split_fig, width="stretch")
 st.caption(
     "A first-team deal is a fee of at least €10m, or a loan for a player who had already played 900 minutes. "
@@ -111,7 +154,7 @@ st.markdown(
 )
 st.markdown(
     "All 7 hits were first-team arrivals (7 hits, 7 mixed, 8 misses, 2 too early). "
-    "Development moves were 0 hits, 1 mixed and 11 misses. "
+    "Development moves were 0 hits, 1 mixed, 11 misses, and 2 too early. "
     "The sample is small, 13 scored signings out of 38 arrivals, so this is evidence about these windows, not proof."
 )
 
