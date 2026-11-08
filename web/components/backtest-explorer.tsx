@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { PlayerChip } from "@/components/player-chip";
@@ -62,29 +62,18 @@ function median(values: number[]) {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-function beatRate(picks: BacktestPick[], windows: BacktestWindow[]) {
-  const baseline = new Map(windows.map((row) => [row.window, row.ageMatched]));
-  const eligible = picks.filter(
-    (pick) => pick.valueChangePct != null && baseline.get(pick.window) != null,
-  );
-  const wins = eligible.filter((pick) => pick.valueChangePct! > baseline.get(pick.window)!);
-  return {
-    wins: wins.length,
-    total: eligible.length,
-    share: eligible.length ? Math.round((wins.length / eligible.length) * 100) : null,
-  };
-}
-
 export function BacktestExplorer({
   signings,
   picks,
   windows,
   playerIds,
+  beatSharePct,
 }: {
   signings: BacktestSigning[];
   picks: BacktestPick[];
   windows: BacktestWindow[];
   playerIds: string[];
+  beatSharePct: number;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -103,8 +92,6 @@ export function BacktestExplorer({
   const ageMatchedMedian = median(windows.flatMap((row) => (row.ageMatched == null ? [] : [row.ageMatched])));
   const firstTeam = signings.filter((row) => row.tier === "first-team");
   const firstTeamMedian = median(firstTeam.flatMap((row) => (row.valueChangePct == null ? [] : [row.valueChangePct])));
-  const beat = useMemo(() => beatRate(picks, windows), [picks, windows]);
-
   useEffect(() => {
     if (requested !== windowSlug(windowLabel)) router.replace(`/backtest?window=${windowSlug(windowLabel)}`);
   }, [requested, windowLabel, router]);
@@ -283,14 +270,12 @@ export function BacktestExplorer({
             </tbody>
           </table>
         </div>
-        {beat.total ? (
-          <p className="mt-4 text-sm text-[#3A4256]">
-            Model picks that beat their window&apos;s fair baseline: {beat.share}% ({beat.wins} of {beat.total})
-          </p>
-        ) : null}
+        <p className="mt-4 text-sm text-[#3A4256]">
+          Model picks that beat young players in the same role and window: {Math.round(beatSharePct)}%
+        </p>
       </section>
       <p className="mt-10 max-w-2xl text-[#1C2333]">
-        The model&apos;s picks held their value (median {formatSignedPercent(pickMedian, 0)}), compared with {formatSignedPercent(ageMatchedMedian, 1)} for age-matched peers across the windows. Only {beat.share ?? 0}% beat their own window&apos;s baseline, so there is no reliable edge. Spurs&apos; first-team signings gained {formatSignedPercent(firstTeamMedian, 1)} at the median, and every hit was a first-team signing.
+        The model&apos;s picks held their value (median {formatSignedPercent(pickMedian, 0)}), compared with {formatSignedPercent(ageMatchedMedian, 1)} for age-matched peers across the windows. Only {Math.round(beatSharePct)}% beat young players in the same role and window, so there is no reliable edge. Spurs&apos; first-team signings gained {formatSignedPercent(firstTeamMedian, 1)} at the median, and every hit was a first-team signing.
       </p>
     </div>
   );
