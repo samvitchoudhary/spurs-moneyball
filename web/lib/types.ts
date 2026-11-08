@@ -42,6 +42,16 @@ export type Cluster = {
   size: number;
   moreOf: string;
   lessOf: string;
+  typicalPlayers: string[];
+};
+
+export type SquadPlayer = {
+  id: string;
+  name: string;
+  positionGroup: string;
+  style: string | null;
+  has2526Point: boolean;
+  inPlayers: boolean;
 };
 
 export type PredictionPoint = {

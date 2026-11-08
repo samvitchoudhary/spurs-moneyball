@@ -22,13 +22,17 @@ sys.path.insert(0, str(ROOT / "app"))
 
 from src.cluster import style_matrix  # noqa: E402
 from src.features import feature_columns  # noqa: E402
+from src.needs import SPURS, _current_squad, benchmark_clubs  # noqa: E402
 from src.similarity import cosine_similarity_matrix  # noqa: E402
+from src.value_model import POSITION_ORDER  # noqa: E402
 from utils import FEATURE_LABELS, backtest_headlines, flag_emoji  # noqa: E402
 
 DATA = ROOT / "app_data"
 OUT = ROOT / "web" / "public" / "data"
+VALUED = ROOT / "data" / "processed" / "player_season_valued.csv"
 POOL = 2526
 NEIGHBOURS = 20
+TYPICAL = 3
 
 ROLE = {
     "CB": "Centre-back",
@@ -60,6 +64,122 @@ def num(value, digits: int = 4):
 def season_label(season: int) -> str:
     text = f"{int(season):04d}"
     return f"20{text[:2]}-{text[2:]}"
+
+
+def typical_player_ids(clusters: pd.DataFrame, pool: pd.DataFrame, player_ids: set[str]) -> dict[tuple[str, int], list[str]]:
+    """The players closest to each centroid, using the same ids as players.json."""
+    known = pool.loc[:, ["player", "team", "id"]].drop_duplicates(["player", "team"])
+    frame = clusters.merge(known, on=["player", "team"], how="left")
+    missing = frame["id"].isna()
+    if missing.any():
+        unique = pool.groupby("player")["id"].nunique()
+        single = unique.loc[unique.eq(1)].index
+        fallback = pool.loc[pool["player"].isin(single)].drop_duplicates("player").set_index("player")["id"]
+        frame.loc[missing, "id"] = frame.loc[missing, "player"].map(fallback)
+    frame = frame.loc[frame["id"].isin(player_ids)].copy()
+    frame = frame.sort_values(["distance_to_centroid", "player", "id"], kind="mergesort")
+    chosen: dict[tuple[str, int], list[str]] = {}
+    for (group, cluster_id), rows in frame.groupby(["position_group", "cluster_id"], sort=False):
+        chosen[(str(group), int(cluster_id))] = [str(item) for item in rows["id"].head(TYPICAL)]
+    return chosen
+
+
+def _squad_id(vectors: pd.DataFrame, name: str, birth_year) -> str:
+    hits = vectors.loc[vectors["player"].eq(name)]
+    if pd.notna(birth_year):
+        year = int(birth_year)
+        dated = hits.loc[pd.to_numeric(hits["birth_year"], errors="coerce").eq(year)]
+        if not dated.empty:
+            return str(dated.iloc[0].id)
+    unique = hits["id"].dropna().unique()
+    if len(unique) == 1:
+        return str(unique[0])
+    return player_id(name, birth_year)
+
+
+def build_squad_table(
+    vectors: pd.DataFrame,
+    clusters: pd.DataFrame,
+    player_ids: set[str],
+    point_ids: set[str],
+) -> pd.DataFrame:
+    """2026-27 Tottenham outfield squad, same membership as the needs analysis."""
+    valued = pd.read_csv(VALUED)
+    current = _current_squad(valued, [SPURS, *benchmark_clubs(valued)])
+    spurs = current.loc[current["team"].eq(SPURS)].copy()
+    styles = clusters.copy()
+    styles["minutes"] = pd.to_numeric(styles["minutes"], errors="coerce").fillna(0.0)
+    styles = styles.sort_values(["player", "position_group", "minutes"], ascending=[True, True, False])
+    styles = styles.drop_duplicates(["player", "position_group"])
+    styles = styles.loc[:, ["player", "position_group", "cluster_name"]].rename(columns={"cluster_name": "style"})
+    spurs = spurs.merge(styles, on=["player", "position_group"], how="left")
+
+    rows = []
+    for row in spurs.itertuples(index=False):
+        pid = _squad_id(vectors, str(row.player), row.birth_year)
+        style = row.style
+        if style is None or pd.isna(style):
+            style = None
+        else:
+            style = str(style)
+        rows.append(
+            {
+                "id": pid,
+                "name": str(row.player),
+                "positionGroup": str(row.position_group),
+                "style": style,
+                "has2526Point": pid in point_ids,
+                "inPlayers": pid in player_ids,
+            }
+        )
+    squad = pd.DataFrame(rows)
+    if squad.empty:
+        raise SystemExit("The 2026-27 Tottenham squad is empty.")
+    if squad["id"].duplicated().any():
+        raise SystemExit("A squad id maps to more than one player.")
+    order = pd.Categorical(squad["positionGroup"], categories=POSITION_ORDER, ordered=True)
+    squad = squad.assign(positionGroup=order).sort_values(["positionGroup", "name"], kind="mergesort")
+    squad["positionGroup"] = squad["positionGroup"].astype(str)
+    return squad.reset_index(drop=True)
+
+
+def refresh_squad(
+    vectors: pd.DataFrame,
+    clusters: pd.DataFrame,
+    player_ids: set[str],
+    point_ids: set[str],
+) -> None:
+    """Write app_data/squad.parquet when the local season table is present.
+
+    squad.json is read back from that parquet, so the export does not need
+    data/processed once the table has been committed.
+    """
+    if not VALUED.exists():
+        return
+    squad = build_squad_table(vectors, clusters, player_ids, point_ids)
+    DATA.mkdir(parents=True, exist_ok=True)
+    squad.to_parquet(DATA / "squad.parquet", index=False)
+
+
+def squad_payload(frame: pd.DataFrame) -> list[dict]:
+    rows = []
+    for row in frame.itertuples(index=False):
+        style = row.style
+        if style is None or pd.isna(style):
+            style = None
+        else:
+            style = str(style)
+        rows.append(
+            {
+                "id": str(row.id),
+                "name": str(row.name),
+                "positionGroup": str(row.positionGroup),
+                "style": style,
+                "has2526Point": bool(row.has2526Point),
+                "inPlayers": bool(row.inPlayers),
+            }
+        )
+    return rows
 
 
 def write(name: str, payload) -> int:
@@ -215,6 +335,8 @@ def main() -> None:
             )
         pca[str(group)] = points
 
+    exported_ids = {player["id"] for player in players}
+    typical = typical_player_ids(clusters, pool, exported_ids)
     cluster_rows = []
     for row in names.itertuples(index=False):
         cluster_rows.append(
@@ -226,6 +348,7 @@ def main() -> None:
                 "size": int(row.size),
                 "moreOf": str(row.high_features),
                 "lessOf": str(row.low_features),
+                "typicalPlayers": typical.get((str(row.position_group), int(row.cluster_id)), []),
             }
         )
 
@@ -386,11 +509,19 @@ def main() -> None:
         "roles": ROLE,
     }
 
+    point_ids = {point["id"] for points in pca.values() for point in points}
+    refresh_squad(vectors, clusters, exported_ids, point_ids)
+    squad_path = DATA / "squad.parquet"
+    if not squad_path.exists():
+        raise SystemExit("app_data/squad.parquet is missing. Build it where data/processed exists.")
+    squad_rows = squad_payload(pd.read_parquet(squad_path))
+
     total = 0
     total += write("players.json", players)
     total += write("search.json", search)
     total += write("neighbors.json", neighbours)
     total += write("clusters.json", cluster_rows)
+    total += write("squad.json", squad_rows)
     total += write("pca.json", pca)
     total += write("predictions.json", {"points": scatter, "deciles": decile_rows})
     total += write("backtest.json", {"windows": window_rows, "picks": pick_rows, "signings": signing_rows})
