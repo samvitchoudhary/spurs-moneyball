@@ -13,6 +13,7 @@ from app.utils import (
     backtest_headlines,
     category_order,
     euro_tick,
+    flag_badges,
     fully_missing_categories,
     highlight_category,
     humanize_feature_text,
@@ -23,6 +24,10 @@ from app.utils import (
     needs_bottom_to_top,
     pad_bar_value_axis,
     percent_point_label,
+    player_card,
+    readable_flag_text,
+    same_side_applies,
+    similarity_empty_message,
     style_sample_ready,
 )
 
@@ -108,6 +113,31 @@ def test_need_rows_put_the_strongest_case_last_and_keep_the_scores():
     ordered = needs_bottom_to_top(frame)
     assert ordered["role"].tolist() == ["Centre-back", "Striker"]
     assert ordered["need_score"].tolist() == [-0.45, 0.79]
+
+
+def test_same_side_and_empty_leagues_are_explicit():
+    assert same_side_applies("FB") and same_side_applies("AM_W")
+    assert not same_side_applies("CB")
+    message = similarity_empty_message(17, 1, [], False)
+    assert "no selected league" in message
+    assert "aged 17" in message
+    assert readable_flag_text("January,maybe") == "January, maybe"
+
+
+def test_card_figure_and_badges_stay_inside_the_card():
+    html = player_card("Ferran Torres", "Barcelona", 25, "ESP", "ST", "Penalty-box striker", 20_000_000, figure="81", badges=flag_badges("January,maybe"))
+    assert ">81<" in html
+    assert "January, maybe" in html
+    assert html.rfind("January, maybe") < html.rfind("</div>")
+
+
+def test_shortlist_legend_follows_the_stack_order():
+    fig = go.Figure()
+    for name in ("Value", "Style", "Form", "Reliability"):
+        fig.add_bar(name=name, y=["A"], x=[1], orientation="h")
+    fig.update_layout(barmode="stack", legend_traceorder="normal")
+    assert [trace.name for trace in fig.data] == ["Value", "Style", "Form", "Reliability"]
+    assert fig.layout.legend.traceorder == "normal"
 
 
 def test_vertical_bars_get_headroom_without_changing_height():

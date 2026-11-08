@@ -2,7 +2,7 @@ import streamlit as st
 
 st.set_page_config(page_title="Moneyball for Spurs", page_icon="⚽", layout="wide")
 
-from utils import footer, load_metrics, load_picks, load_vectors, money, percent_change, prepare_page
+from utils import footer, load_metrics, load_picks, load_vectors, model_label, percent_change, prepare_page
 
 prepare_page("Moneyball for Spurs")
 st.markdown(
@@ -29,11 +29,12 @@ st.markdown(
 one, two, three = st.columns(3)
 one.metric("Players analyzed", f"{players:,}")
 two.metric("2025-26 R²", f"{time_split['r2']:.2f}")
-three.metric("Backtest, picks' median", percent_change(scored.median()))
+three.metric("Picks' median change", percent_change(scored.median()))
 st.caption(
-    f"R² is {kept.replace('_', ' ')} on the 2025-26 season it never trained on. "
+    f"R² is {model_label(kept)} on the 2025-26 season it never trained on. "
     f"Its typical miss on that season was {time_split['median_abs_pct_error']:.0f}% of the fee. "
-    "The backtest figure is the median change in market value for the model's alternative picks."
+    "Picks' median change is the median market-value change for the model's alternative picks. "
+    "+0% is a measured median of zero, not a missing result."
 )
 
 st.subheader("Walk through it")
@@ -47,6 +48,5 @@ links = [
 ]
 for path, label, blurb in links:
     st.page_link(path, label=label, help=blurb)
-    st.caption(blurb)
 
 footer()
