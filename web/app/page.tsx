@@ -121,7 +121,7 @@ export default function HomePage() {
         <SectionHeader
           eyebrow="03"
           title="Pricing players"
-          dek="Log axes, so a doubling from €2m to €4m takes the same space as €20m to €40m. The 2025–26 model explains about 83% of fee variation."
+          dek={`Log axes, so a doubling from €2m to €4m takes the same space as €20m to €40m. The 2025–26 model explains about ${Math.round(meta.r2 * 100)}% of fee variation.`}
         />
         <div className="mt-8">
           <ValueScatter
