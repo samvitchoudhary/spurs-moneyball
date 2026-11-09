@@ -3,6 +3,7 @@ import { MethodDrawer } from "@/components/method-drawer";
 import { PlayerChip } from "@/components/player-chip";
 import { SectionHeader } from "@/components/section-header";
 import { getNeedsData, getPlayer, getSquad } from "@/lib/data";
+import { squadMentionAge } from "@/lib/format";
 import type { Need, NeedComponents, NeedsSensitivity, SquadPlayer } from "@/lib/types";
 
 const COMPONENTS: { key: keyof NeedComponents; label: string }[] = [
@@ -22,7 +23,7 @@ export default function Page() {
   const strikers = squad.filter((player) => player.positionGroup === "ST");
   const fullbacks = squad.filter((player) => player.positionGroup === "FB");
   const robertson = fullbacks.find((player) => player.id === "andy-robertson-1994");
-  const robertsonAge = robertson ? getPlayer(robertson.id)?.age : null;
+  const robertsonProfile = robertson ? getPlayer(robertson.id) : undefined;
   const fullback = needs.find((need) => need.positionGroup === "FB");
   const ageShare = fullback?.raw.ageShare;
 
@@ -65,7 +66,7 @@ export default function Page() {
       <div className="mt-10 grid gap-4 md:grid-cols-2">
         <VerdictCard title="Striker: a penalty-box striker. All current strikers drop deep or press." players={strikers} />
         <VerdictCard
-          title={`Left-back: a successor to Robertson (${robertsonAge ?? "—"}, ${shareLabel(ageShare)} of full-back minutes).`}
+          title={`Left-back: a successor to Robertson (${robertsonProfile ? squadMentionAge(robertsonProfile) : "—"}, ${shareLabel(ageShare)} of full-back minutes).`}
           players={fullbacks}
         />
       </div>
