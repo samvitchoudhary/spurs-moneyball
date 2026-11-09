@@ -111,6 +111,24 @@ export type BacktestSigning = {
   valueChangePct: number | null;
 };
 
+export type NeedComponents = {
+  quality: number | null;
+  output: number | null;
+  depth: number | null;
+  age: number | null;
+  contract: number | null;
+};
+
+export type NeedRaw = {
+  spursDepth: number | null;
+  benchmarkDepth: number | null;
+  spursQualityEur: number | null;
+  benchmarkQualityEur: number | null;
+  outputPercentile: number | null;
+  ageShare: number | null;
+  contractShare: number | null;
+};
+
 export type Need = {
   positionGroup: string;
   position: string;
@@ -120,6 +138,27 @@ export type Need = {
   stylesPresent: string | null;
   stylesMissing: string | null;
   outputPercentile: number | null;
+  components: NeedComponents;
+  raw: NeedRaw;
+};
+
+export type NeedsSensitivityPosition = {
+  positionGroup: string;
+  needScoreEqual: number | null;
+  needScoreQuality50: number | null;
+  rankEqual: number;
+  rankQuality50: number;
+};
+
+export type NeedsSensitivity = {
+  top2EqualWeightsChanged: boolean;
+  top2Quality50Changed: boolean;
+  positions: NeedsSensitivityPosition[];
+};
+
+export type NeedsData = {
+  positions: Need[];
+  needsSensitivity: NeedsSensitivity;
 };
 
 export type ShortlistRow = {

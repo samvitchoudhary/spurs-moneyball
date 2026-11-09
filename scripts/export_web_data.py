@@ -501,8 +501,11 @@ def main() -> None:
             }
         )
 
+    needs_ordered = needs.sort_values("need_score", ascending=False)
+    rank_equal = needs_ordered["need_score_equal"].rank(ascending=False, method="min").astype(int)
+    rank_quality50 = needs_ordered["need_score_quality50"].rank(ascending=False, method="min").astype(int)
     need_rows = []
-    for row in needs.sort_values("need_score", ascending=False).itertuples(index=False):
+    for index, row in enumerate(needs_ordered.itertuples(index=False)):
         need_rows.append(
             {
                 "positionGroup": str(row.position_group),
@@ -513,8 +516,44 @@ def main() -> None:
                 "stylesPresent": None if pd.isna(row.styles_present) else str(row.styles_present),
                 "stylesMissing": None if pd.isna(row.styles_missing) else str(row.styles_missing),
                 "outputPercentile": num(row.output_percentile, 1),
+                "components": {
+                    "quality": num(row.z_quality, 3),
+                    "output": num(row.z_output, 3),
+                    "depth": num(row.z_depth, 3),
+                    "age": num(row.z_age, 3),
+                    "contract": num(row.z_contract, 3),
+                },
+                "raw": {
+                    "spursDepth": num(row.spurs_depth, 3),
+                    "benchmarkDepth": num(row.benchmark_depth, 3),
+                    "spursQualityEur": num(row.spurs_quality, 0),
+                    "benchmarkQualityEur": num(row.benchmark_quality, 0),
+                    "outputPercentile": num(row.output_percentile, 1),
+                    "ageShare": num(row.spurs_age_share, 3),
+                    "contractShare": num(row.spurs_contract_share, 3),
+                },
             }
         )
+    sensitivity_rows = []
+    for index, row in enumerate(needs_ordered.itertuples(index=False)):
+        sensitivity_rows.append(
+            {
+                "positionGroup": str(row.position_group),
+                "needScoreEqual": num(row.need_score_equal, 3),
+                "needScoreQuality50": num(row.need_score_quality50, 3),
+                "rankEqual": int(rank_equal.iloc[index]),
+                "rankQuality50": int(rank_quality50.iloc[index]),
+            }
+        )
+    first_sensitivity = needs_ordered.iloc[0]
+    needs_payload = {
+        "positions": need_rows,
+        "needsSensitivity": {
+            "top2EqualWeightsChanged": bool(first_sensitivity["top2_equal_changed"]),
+            "top2Quality50Changed": bool(first_sensitivity["top2_quality50_changed"]),
+            "positions": sensitivity_rows,
+        },
+    }
 
     short_rows = []
     for row in shortlist.sort_values(["need", "rank"]).itertuples(index=False):
@@ -593,7 +632,7 @@ def main() -> None:
     total += write("pca.json", pca)
     total += write("predictions.json", {"points": scatter, "deciles": decile_rows})
     total += write("backtest.json", {"windows": window_rows, "picks": pick_rows, "signings": signing_rows})
-    total += write("needs.json", need_rows)
+    total += write("needs.json", needs_payload)
     total += write("shortlist.json", short_rows)
     total += write("meta.json", meta)
     total += write("model_metrics.json", model_metrics)

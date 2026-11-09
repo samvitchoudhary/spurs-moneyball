@@ -10,6 +10,7 @@ import type {
   Meta,
   ModelMetrics,
   Need,
+  NeedsData,
   Neighbor,
   PcaPoint,
   Player,
@@ -69,7 +70,8 @@ export function getBacktest(): { windows: BacktestWindow[]; picks: BacktestPick[
 }
 
 export function getNeeds(): Need[] {
-  return read<Need[]>("needs.json");
+  const data = read<NeedsData | Need[]>("needs.json");
+  return Array.isArray(data) ? data : data.positions;
 }
 
 export function getShortlist(): ShortlistRow[] {
