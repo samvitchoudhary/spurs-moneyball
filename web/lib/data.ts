@@ -11,6 +11,7 @@ import type {
   ModelMetrics,
   Need,
   NeedsData,
+  SquadPlayer,
   Neighbor,
   PcaPoint,
   Player,
@@ -69,9 +70,17 @@ export function getBacktest(): { windows: BacktestWindow[]; picks: BacktestPick[
   return read("backtest.json");
 }
 
+export function getNeedsData(): NeedsData {
+  return read<NeedsData>("needs.json");
+}
+
 export function getNeeds(): Need[] {
   const data = read<NeedsData | Need[]>("needs.json");
   return Array.isArray(data) ? data : data.positions;
+}
+
+export function getSquad(): SquadPlayer[] {
+  return read<SquadPlayer[]>("squad.json");
 }
 
 export function getShortlist(): ShortlistRow[] {
